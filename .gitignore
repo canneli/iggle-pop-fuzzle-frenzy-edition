@@ -1,0 +1,9 @@
+*.exe
+*.dll
+*.saf
+*.obj
+*.o
+*.zip
+*.reg
+*.log
+payload.zip
