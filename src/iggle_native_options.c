@@ -97,6 +97,7 @@ static void track_menu_screen(void *screen,const char *path)
 static void custom_trace(const char *message);
 #endif
 static void reset_restored_objects(void);
+static void reset_crystal_power(void);
 static BOOL action_is(void *action, const char *label);
 
 static BYTE __attribute__((thiscall)) layout_hook(void *screen, GameString file)
@@ -113,6 +114,7 @@ static BYTE __attribute__((thiscall)) layout_hook(void *screen, GameString file)
         if (strstr(name, "pauseMenu.xml")) in_pause_menu = TRUE;
         if (strstr(name, "mainMenu.xml")) {
             in_pause_menu = FALSE;
+            reset_crystal_power();
             reset_restored_objects();
             custom_exit_pending = FALSE;
             custom_game = NULL;
@@ -217,7 +219,11 @@ static IggleDiamondView diamonds;
 static float diamond_drop_delay;
 typedef void (__attribute__((thiscall)) *JewelScore)(void *,int,const float *);
 static JewelScore original_collect_jewel;
-static BOOL jewel_ready;
+static BOOL jewel_ready, crystal_shield_ready;
+static void *shield_grace_player;
+static float shield_grace_seconds;
+static PhaseFunction original_fatal_hit, original_direct_fatal_hit;
+static ActionFunction original_world_fatal_hit;
 static void __attribute__((thiscall)) collect_native_jewel(void *world,int points,const float *position);
 static PhaseFunction original_fuzzle_cleanup;
 static void remember_rainbow(void *fuzzle);
@@ -244,6 +250,13 @@ void iggle_end_slow_power(void)
     custom_trace("slow power expired");
 }
 
+static void reset_crystal_power(void)
+{
+    AcquireSRWLockExclusive(&diamond_lock);
+    memset(&diamonds,0,sizeof diamonds);
+    ReleaseSRWLockExclusive(&diamond_lock);
+}
+
 static void reset_restored_objects(void)
 {
     iggle_end_slow_power();
@@ -251,7 +264,12 @@ static void reset_restored_objects(void)
     rainbow_count = restored_monster_count = 0;
     rainbow_fuzzle_count = 0;
     AcquireSRWLockExclusive(&diamond_lock);
-    memset(&diamonds,0,sizeof diamonds);
+    diamonds.count=0;
+    diamonds.positioned=FALSE;
+    diamonds.burst_seconds=0;
+    diamonds.grace_seconds=0;
+    shield_grace_player=NULL;
+    shield_grace_seconds=0;
     diamond_drop_delay=0;
     ReleaseSRWLockExclusive(&diamond_lock);
     dragon_drawable_count = 0;
@@ -477,18 +495,16 @@ static void __attribute__((thiscall)) init_blobby_art(void *self, void *args)
 
 static void __attribute__((thiscall)) tick_monster_art(void *self, void *frame)
 {
-    if(!custom_running && diamonds.aura<=0) {original_monster_tick(self,frame);return;}
+    if (!custom_running && diamonds.slow_seconds<=0) {
+        original_monster_tick(self,frame);
+        return;
+    }
     int previous = restored_art;
     void *body = *(void **)((BYTE *)self+0x4c);
     if (matches_spawn(body,ART_DRAGON)) restored_art=ART_DRAGON;
     else if (matches_spawn(body,ART_BLOBBY)) restored_art=ART_BLOBBY;
-    float *delta=(float *)((BYTE *)frame+8), elapsed=*delta, monster_elapsed=elapsed;
-    float x,y;
-    if (diamonds.aura>0 && actor_position(self,&x,&y)) {
-        float dx=x-diamonds.hero_x,dy=y-diamonds.hero_y;
-        if (dx*dx+dy*dy < 145.f*145.f) monster_elapsed=elapsed*.26f;
-    }
-    *delta=monster_elapsed;
+    float *delta=(float *)((BYTE *)frame+8), elapsed=*delta;
+    if (diamonds.slow_seconds>0) *delta=elapsed*.26f;
     original_monster_tick(self,frame);
     if (restored_art==ART_DRAGON) update_dragon_combat(self,frame);
     *delta=elapsed;
@@ -829,9 +845,12 @@ static void step_rainbow_diamonds(void *hero, float dt)
     AcquireSRWLockExclusive(&diamond_lock);
     diamonds.hero_x=x;
     diamonds.hero_y=y;
-    if (diamonds.aura > 0) {
-        diamonds.aura=max(0.f,diamonds.aura-dt);
-        if (diamonds.aura==0) custom_trace("rainbow aura expired");
+    diamonds.positioned=TRUE;
+    diamonds.orbit=fmodf(diamonds.orbit+dt*2.3f,6.2831853f);
+    diamonds.burst_seconds=max(0.f,diamonds.burst_seconds-dt);
+    if (diamonds.slow_seconds>0) {
+        diamonds.slow_seconds=max(0.f,diamonds.slow_seconds-dt);
+        if (diamonds.slow_seconds==0) custom_trace("crystal slowdown expired");
     }
     diamond_drop_delay=max(0.f,diamond_drop_delay-dt);
 #ifdef IGGLE_CUSTOM_TEST
@@ -906,17 +925,88 @@ static void step_rainbow_diamonds(void *hero, float dt)
     ReleaseSRWLockExclusive(&diamond_lock);
 }
 
+static void play_crystal_sound(void *theme, const char *name)
+{
+    if (!theme) return;
+    GameString sound={0};
+    ((MakeString)(game_image+0x3d30))(&sound,name);
+    typedef void (__attribute__((thiscall)) *PlayThemeSound)(void *,GameString,float,float);
+    ((PlayThemeSound)(game_image+0x246f0))(theme,sound,1.f,1.f);
+    custom_trace(name);
+}
+
 static void __attribute__((thiscall)) collect_native_jewel(void *world,int points,const float *position)
 {
     original_collect_jewel(world,points,position);
+    if (!crystal_shield_ready) return;
     AcquireSRWLockExclusive(&diamond_lock);
-    if (++diamonds.collected==3) {
+    BOOL activated=++diamonds.collected==3;
+    if (activated) {
         diamonds.collected=0;
-        diamonds.aura=7.f;
-        custom_trace("rainbow aura activated");
+        diamonds.shield=TRUE;
+        diamonds.slow_seconds=5.f;
+        diamonds.orbit=0;
+        custom_trace("crystal shield activated");
     }
     custom_trace("native jewel collected");
     ReleaseSRWLockExclusive(&diamond_lock);
+    if (activated) play_crystal_sound(*(void **)((BYTE *)world+0x20),"crystalshieldon");
+}
+
+static BOOL crystal_grace_active(void *player)
+{
+    return player && player==shield_grace_player && shield_grace_seconds>0;
+}
+
+static BOOL absorb_fatal_hit(BYTE *player)
+{
+    if (!player || *(BYTE **)player!=game_image+0x112358) return FALSE;
+    if (crystal_grace_active(player)) {
+        custom_trace("crystal grace blocked another hit");
+        return TRUE;
+    }
+    if (!diamonds.shield) return FALSE;
+
+    // Read the timer used by the original post-respawn state. Stay in the
+    // active movement state so the hero keeps its input and maze collisions.
+    shield_grace_player=player;
+    shield_grace_seconds=*(const float *)(game_image+0x10f2e8);
+    AcquireSRWLockExclusive(&diamond_lock);
+    diamonds.shield=FALSE;
+    diamonds.burst_seconds=.42f;
+    diamonds.grace_seconds=shield_grace_seconds;
+    ReleaseSRWLockExclusive(&diamond_lock);
+    dragon_slow_player=NULL;
+    dragon_slow_seconds=0;
+    void *world=*(void **)(player+0xd4);
+    if (world) play_crystal_sound(*(void **)((BYTE *)world+0x20),"crystalshieldbreak");
+    custom_trace("crystal shield consumed; native grace started");
+    return TRUE;
+}
+
+static void __attribute__((thiscall)) fatal_hit(void *state)
+{
+    if (!absorb_fatal_hit(*(BYTE **)((BYTE *)state+0xc))) {
+        custom_trace("crystal fatal hit forwarded");
+        original_fatal_hit(state);
+    }
+}
+
+static void __attribute__((thiscall)) direct_fatal_hit(void *player)
+{
+    if (!absorb_fatal_hit(player)) original_direct_fatal_hit(player);
+}
+
+static void __attribute__((thiscall)) world_fatal_hit(void *world, void *source)
+{
+    // The world handler also disconnects the follower chain and changes the
+    // level state. Intercept the hit before those side effects can run.
+    BYTE *player=*(BYTE **)((BYTE *)world+0x118);
+    if (source && absorb_fatal_hit(player)) {
+        custom_trace("crystal blocked world hit before follower release");
+        return;
+    }
+    original_world_fatal_hit(world,source);
 }
 
 BOOL iggle_diamond_view(IggleDiamondView *view)
@@ -924,7 +1014,8 @@ BOOL iggle_diamond_view(IggleDiamondView *view)
     if (!TryAcquireSRWLockShared(&diamond_lock)) return FALSE;
     *view=diamonds;
     ReleaseSRWLockShared(&diamond_lock);
-    return view->count || view->collected || view->aura>0;
+    return view->positioned &&
+        (view->count || view->collected || view->shield || view->burst_seconds>0 || view->grace_seconds>0);
 }
 
 static void *__attribute__((thiscall)) construct_fireball(void *self, void *world, int derived)
@@ -958,12 +1049,17 @@ static void __attribute__((thiscall)) fireball_other_hit(void *state, void *targ
 static void __attribute__((thiscall)) fireball_player_hit(void *state, void *target)
 {
     BYTE *projectile=*(BYTE **)((BYTE *)state+0x10);
-    if(restored_index(fireballs,fireball_count,projectile)<0) {original_fireball_player_hit(state,target);return;}
-    dragon_slow_player=target;
-    dragon_slow_seconds=4.f;
-    custom_trace("dragon fire slowed player without bubble");
+    if (!crystal_grace_active(target)) {
+        if (restored_index(fireballs,fireball_count,projectile)<0) {
+            original_fireball_player_hit(state,target);
+            return;
+        }
+        dragon_slow_player=target;
+        dragon_slow_seconds=4.f;
+        custom_trace("dragon fire slowed player without bubble");
+    }
     void *sprite=*(void **)(projectile+0x48);
-    if(sprite) ((ActionFunction)(*(void ***)sprite)[0x78/4])(sprite,NULL);
+    if (sprite) ((ActionFunction)(*(void ***)sprite)[0x78/4])(sprite,NULL);
     projectile[0x44]=1;
 }
 
@@ -971,8 +1067,38 @@ static void __attribute__((thiscall)) step_dragon_slow_player(void *player, void
 {
     if(*(BYTE **)player==game_image+0x112358) current_player=player;
     float frame_seconds=*(float *)((BYTE *)frame+8);
+    if (crystal_grace_active(player) && !in_pause_menu && !custom_exit_pending &&
+        frame_seconds>0.f && frame_seconds<.5f) {
+        shield_grace_seconds=max(0.f,shield_grace_seconds-frame_seconds);
+        AcquireSRWLockExclusive(&diamond_lock);
+        diamonds.grace_seconds=shield_grace_seconds;
+        ReleaseSRWLockExclusive(&diamond_lock);
+#ifdef IGGLE_CUSTOM_TEST
+        if (GetEnvironmentVariableA("IGGLE_GRACE_MOVEMENT_SMOKE",NULL,0)) {
+            static DWORD next_sample;
+            DWORD now=GetTickCount();
+            float x,y;
+            if ((LONG)(now-next_sample)>=0 && actor_position(player,&x,&y)) {
+                char sample[110];
+                BYTE *controller=(BYTE *)player+0xe0;
+                typedef BYTE *(__attribute__((thiscall)) *GetState)(void *);
+                BYTE *state=((GetState)(*(void ***)controller)[0x18/4])(controller);
+                snprintf(sample,sizeof sample,"crystal grace pose %.2f %.2f %.2f %lx %d",
+                    shield_grace_seconds,x,y,state?(unsigned long)(*(BYTE **)state-game_image):0,
+                    ((void *(__attribute__((thiscall)) *)(void *))(game_image+0x66020))(player)!=NULL);
+                custom_trace(sample);
+                next_sample=now+80;
+            }
+        }
+#endif
+        if (shield_grace_seconds==0) {
+            shield_grace_player=NULL;
+            custom_trace("native crystal grace expired");
+        }
+    }
     if (player==current_player && !in_pause_menu && !custom_exit_pending &&
-        frame_seconds>0.f && frame_seconds<.5f && (rainbow_fuzzle_count || diamonds.count || diamonds.aura>0 || diamonds.collected))
+        frame_seconds>0.f && frame_seconds<.5f && (rainbow_fuzzle_count || diamonds.count || diamonds.slow_seconds>0 ||
+        diamonds.shield || diamonds.collected || diamonds.burst_seconds>0 || diamonds.grace_seconds>0))
         step_rainbow_diamonds(player,frame_seconds);
     if(player!=dragon_slow_player || dragon_slow_seconds<=0) {original_player_step(player,frame);return;}
     float *delta=(float *)((BYTE *)frame+8), elapsed=*delta;
@@ -1133,6 +1259,7 @@ static void restore_menu_input(BYTE *game)
 
 static void finish_custom(BYTE *game)
 {
+    reset_crystal_power();
     reset_restored_objects();
     custom_trace("custom gameplay finished");
     custom_exit_pending = FALSE;
@@ -1438,6 +1565,7 @@ static void __attribute__((thiscall)) main_hook(void *self,void *action)
     }
     if(action_is(action,"newGame") || action_is(action,"newRetro")) {
         custom_running=FALSE;loading_custom_objects=FALSE;
+        reset_crystal_power();
         reset_restored_objects();
         custom_state=NULL;custom_game=NULL;custom_exit_pending=FALSE;
         custom_trace("native game selected; restored objects disabled");
@@ -1546,6 +1674,13 @@ static void install_restored_objects(BYTE *base)
     const BYTE make_sprite[] = {0x6a,0xff,0x68,0x24,0x83,0x50,0x00};
     const BYTE sprite_draw[] = {0x56,0x8b,0xf1,0x8b,0x06};
     const BYTE collect_jewel[]={0x51,0x56,0x68,0,0,0x80,0x3f};
+    const BYTE lethal[] = {0x6a,0xff,0x68,0xbb,0x33,0x50,0x00};
+    BOOL hit_hook=install_action(base+0x4b510,lethal,sizeof lethal,(ActionFunction)fatal_hit,(ActionFunction *)&original_fatal_hit);
+    BOOL direct_hit_hook=install_action(base+0x4b460,lethal,sizeof lethal,(ActionFunction)direct_fatal_hit,(ActionFunction *)&original_direct_fatal_hit);
+    const BYTE world_lethal[] = {0x64,0xa1,0,0,0,0};
+    BOOL world_hit_hook=install_action(base+0x339b0,world_lethal,sizeof world_lethal,
+        world_fatal_hit,&original_world_fatal_hit);
+    crystal_shield_ready=hit_hook && direct_hit_hook && world_hit_hook;
     jewel_ready=install_action(base+0x338d0,collect_jewel,sizeof collect_jewel,(ActionFunction)collect_native_jewel,(ActionFunction *)&original_collect_jewel);
     const BYTE world_step[] = {0x83,0xec,0x08,0x55,0x8b,0x6c,0x24,0x10};
     if (!install_action(base+0x24ae0, art, sizeof art, (ActionFunction)find_restored_art, (ActionFunction *)&original_find_art)) return;

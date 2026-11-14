@@ -57,7 +57,7 @@ static struct Art art[] = {{"menuwindowlarge"},{"orangebutton"},{"orangebuttonhi
  {"level-pop-green"},{"level-pop-blue"},{"level-pop-yellow"},{"level-pop-purple"},
  {"level-slow"},{"level-dragon"},{"level-rainbow-0"},{"level-rainbow-1"},
  {"editor-hudbg"},{"editor-modeselbtn"},{"editor-modeselbtnhi"},{"editor-modeselbtnchecked"},
- {"editor-editbtnbase"},{"editor-editbtnbasehi"},{"editor-imgframe"},{"editor-tinybtnbase"},{"rainbow-diamond"},{"rainbow-aura"}
+ {"editor-editbtnbase"},{"editor-editbtnbasehi"},{"editor-imgframe"},{"editor-tinybtnbase"},{"rainbow-diamond"},{"rainbow-aura"},{"crystal-sparkle"}
 };
 struct Vertex { float x,y,z,rhw; DWORD color; float u,v; };
 
@@ -127,7 +127,7 @@ enum { ART_HERO=6, ART_ZOOG, ART_CAGE, ART_HOME=ART_CAGE+EDIT_COLOR_COUNT,
        ART_GUARD, ART_BOMBER, ART_GMZ, ART_FREEZE, ART_ZAP, ART_SORT, ART_POP,
        ART_SLOW=ART_POP+EDIT_COLOR_COUNT, ART_DRAGON, ART_RAINBOW, ART_RAINBOW_ALT,
        ART_EDITOR_HUD, ART_MODE, ART_MODE_HOVER, ART_MODE_CHECK, ART_EDITOR_BUTTON,
-       ART_EDITOR_BUTTON_HOVER, ART_EDITOR_FRAME, ART_EDITOR_ARROW, ART_DIAMOND, ART_AURA };
+       ART_EDITOR_BUTTON_HOVER, ART_EDITOR_FRAME, ART_EDITOR_ARROW, ART_DIAMOND, ART_AURA, ART_CRYSTAL_SPARKLE };
 static const int monster_art[EDIT_ZOOG_COUNT] = {
  ART_ZOOG,ART_ZOOG,ART_BLOBBY,ART_BLOBBY,ART_SHOOTER,ART_ARMOR,ART_FIRE,ART_TUNNEL,ART_ZOOG,
  ART_GUARD,ART_GUARD,ART_BOMBER,ART_BOMBER,ART_BOMBER,ART_BOMBER,ART_BOMBER,ART_GMZ,ART_DRAGON
@@ -394,18 +394,44 @@ static void draw_diamond_effects(IDirect3DDevice9 *d,const IggleDiamondView *vie
  float sx=g_ddraw.render.viewport.width/(float)max(1,g_ddraw.width);
  float sy=g_ddraw.render.viewport.height/(float)max(1,g_ddraw.height);
  float ox=(float)g_ddraw.render.viewport.x,oy=(float)g_ddraw.render.viewport.y;
- if (view->aura>0) {
-  float size=89.f+5.f*sinf(view->aura*5.f);
-  unsigned alpha=(unsigned)(min(view->aura*2.f,1.f)*255.f);
+ BOOL sparkle=load_art(d,ART_CRYSTAL_SPARKLE);
+ if (view->grace_seconds>0 && view->burst_seconds==0 &&
+     ((int)(view->grace_seconds*10.f)&1)) {
+  quad(d,art[ART_AURA].tex,ox+(view->hero_x-29)*sx,oy+(view->hero_y-32)*sy,
+       58*sx,58*sy,0x73c3ecff,0,0,1,1);
+ }
+ if (view->shield || view->burst_seconds>0) {
+  float burst=view->burst_seconds/.42f;
+  float size=view->shield ? 72.f+4.f*sinf(view->orbit*3.f) : 74.f+63.f*(1.f-burst);
+  unsigned alpha=view->shield ? (view->slow_seconds>0 ? 220 : 145) : (unsigned)(245.f*burst);
   quad(d,art[ART_AURA].tex,ox+(view->hero_x-size/2)*sx,oy+(view->hero_y-size/2-3)*sy,
        size*sx,size*sy,(alpha<<24)|0xffffff,0,0,1,1);
+  for (unsigned i=0;i<3;++i) {
+   float angle=view->orbit+i*2.0943951f;
+   float depth=sinf(angle);
+   float distance=view->shield ? 1.f : 1.f+1.6f*(1.f-burst);
+   float x=view->hero_x+32.f*distance*cosf(angle);
+   float y=view->hero_y-6.f+19.f*distance*depth;
+   float gem_size=19.f+3.f*depth;
+   unsigned gem_alpha=view->shield ? (unsigned)(242.f+12.f*depth) : (unsigned)(255.f*burst);
+   quad(d,art[ART_DIAMOND].tex,ox+(x-gem_size/2)*sx,oy+(y-gem_size/2)*sy,
+        gem_size*sx,gem_size*sy,(gem_alpha<<24)|0xffffff,0,0,1,1);
+   float glint=view->shield ? powf(.5f+.5f*sinf(angle*3.f+i*1.7f),9.f) : burst;
+   if (sparkle && glint>.03f) {
+    float star_size=8.f+9.f*glint;
+    unsigned star_alpha=(unsigned)(245.f*glint);
+    quad(d,art[ART_CRYSTAL_SPARKLE].tex,ox+(x-gem_size*.13f-star_size/2)*sx,
+         oy+(y-gem_size*.17f-star_size/2)*sy,star_size*sx,star_size*sy,
+         (star_alpha<<24)|0xffffff,0,0,1,1);
+   }
+  }
  }
  for (unsigned i=0;i<view->count;++i) {
   const IggleDiamond *gem=&view->gems[i];
   float bob=2.f*sinf(gem->age*4.f);
   unsigned alpha=gem->age>12 && ((int)(gem->age*8)&1)?105:255;
-  quad(d,art[ART_DIAMOND].tex,ox+(gem->x-14)*sx,oy+(gem->y-13+bob)*sy,
-       29*sx,27*sy,(alpha<<24)|0xffffff,0,0,1,1);
+  quad(d,art[ART_DIAMOND].tex,ox+(gem->x-18)*sx,oy+(gem->y-17+bob)*sy,
+       36*sx,34*sy,(alpha<<24)|0xffffff,0,0,1,1);
  }
  for (unsigned i=0;i<3;++i) {
   unsigned alpha=i<view->collected?255:70;

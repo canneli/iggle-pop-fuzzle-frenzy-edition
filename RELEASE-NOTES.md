@@ -1,13 +1,19 @@
 ## English
 
-- Blobby has a fuller body and a larger portrait in the level editor. Amber bubbles trail behind him, inspired by the Tracker.
-- The original blue diamonds still award points. Collect three to activate a seven-second aura that slows nearby enemies. Rainbows occasionally leave a diamond with the same sprite and point value.
+- Three blue diamonds now slow all enemies for five seconds and grant a shield that lasts until it absorbs a fatal hit.
+- Breaking the shield grants the original 2.5-second protection window while the hero stays under player control. Absorbed hits leave the follower chain in place.
+- Diamonds now have cleaner edges and animated glints. Activation and shield break each have their own sound.
+- The Rainbow has an updated south-facing walking sprite.
+- The README includes individual illustrations of the restored content and in-game editor.
 
-Close the game and point the Windows installer to your Steam installation of **Iggle Pop! Deluxe**. See the [README](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition#readme) for screenshots and instructions.
+Close the game, run the Windows patch and select the Steam installation of **Iggle Pop! Deluxe**.
 
 ## Português (Brasil)
 
-- O Blobby ganhou um corpo mais cheio e uma miniatura maior no editor. As bolhas cor de âmbar ficam atrás dele, inspiradas na trilha do Rastreador.
-- Os diamantes azuis originais continuam dando pontos. A cada três, a aura desacelera os inimigos próximos por sete segundos. Os Rainbows às vezes deixam um diamante com o mesmo sprite e a mesma pontuação.
+- Três diamantes azuis desaceleram todos os inimigos por cinco segundos e ativam um escudo que dura até absorver um golpe fatal.
+- Ao quebrar, o escudo usa os 2,5 segundos de proteção padrão do jogo. O herói continua sob seu controle e o golpe absorvido preserva a fila.
+- Os diamantes ganharam contornos mais limpos e reflexos animados. A ativação e a quebra do escudo têm sons próprios.
+- O Rainbow ganhou um sprite atualizado ao andar para baixo.
+- O README ganhou imagens individuais do conteúdo restaurado e do editor integrado.
 
-Feche o jogo e selecione a pasta do **Iggle Pop! Deluxe** da Steam no instalador. Confira os prints e as instruções no [README em português](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition#português-brasil).
+Feche o jogo, abra o patch do Windows e selecione a pasta do **Iggle Pop! Deluxe** da Steam.

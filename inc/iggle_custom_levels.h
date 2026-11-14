@@ -10,7 +10,8 @@ typedef struct { float x,y,age; } IggleDiamond;
 typedef struct {
     IggleDiamond gems[IGGLE_DIAMOND_LIMIT];
     unsigned count,collected;
-    float hero_x,hero_y,aura;
+    float hero_x, hero_y, slow_seconds, orbit, burst_seconds, grace_seconds;
+    BOOL shield, positioned;
 } IggleDiamondView;
 BOOL iggle_diamond_view(IggleDiamondView *view);
 BOOL iggle_custom_directory(wchar_t path[MAX_PATH]);

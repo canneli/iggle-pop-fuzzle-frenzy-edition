@@ -104,8 +104,14 @@ static void menu_input(HWND window, unsigned directions, BOOL confirm, BOOL over
 }
 
 #ifdef IGGLE_CUSTOM_TEST
+static unsigned test_gameplay_directions;
 void iggle_test_menu_input(HWND window, WPARAM button)
 {
+    if (button>=16 && button<32) {
+        test_gameplay_directions=(unsigned)button&15;
+        update_controller(window,test_gameplay_directions);
+        return;
+    }
     if (button==5) {
         PostMessageA(window,WM_KEYDOWN,'T',1);
         return;
@@ -119,6 +125,12 @@ void iggle_test_menu_input(HWND window, WPARAM button)
 void iggle_input_poll(HWND window) {
     DWORD now=GetTickCount();float dt=(now-previous_tick)/1000.f;previous_tick=now;
     if(dt>.05f)dt=.05f;
+#ifdef IGGLE_CUSTOM_TEST
+    if (test_gameplay_directions) {
+        update_controller(window,test_gameplay_directions);
+        return;
+    }
+#endif
     if(!focused(window)){iggle_input_release(window);return;}
     float lx=0,ly=0,rx=0,ry=0;WORD buttons=0;BOOL connected=FALSE;BYTE trigger=0;
     XINPUT_STATE state;

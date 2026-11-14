@@ -103,7 +103,7 @@ function repack(inputFile, replacementsFolder, outputFile) {
   const added = [];
   for (const filename of fs.readdirSync(replacementsFolder, {recursive:true}).sort()) {
     const name = filename.split(path.sep).join('/');
-    if (!(name.startsWith('res/monsters/hd/') || name.startsWith('res/menuassets/hd/')) || entries.has(name)) continue;
+    if (!(name.startsWith('res/monsters/hd/') || name.startsWith('res/menuassets/hd/') || name.startsWith('res/sounds/hd/')) || entries.has(name)) continue;
     const file = path.join(replacementsFolder, filename);
     if (!fs.statSync(file).isFile()) continue;
     const data = fs.readFileSync(file);
