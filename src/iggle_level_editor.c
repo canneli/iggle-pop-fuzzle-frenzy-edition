@@ -3,7 +3,9 @@
 #include <msxml2.h>
 #include <wchar.h>
 #include <string.h>
+#include <stdio.h>
 #include "iggle_level_editor.h"
+#include "iggle_mods.h"
 
 static IXMLDOMDocument2 *document;
 static EditorBoard board;
@@ -71,6 +73,12 @@ static int read_world(IXMLDOMDocument2 *doc)
     for (const wchar_t *c = path; *c; ++c)
         if (*c == L'/' || *c == L'\\') name = c+1;
     int world = 0;
+    char id[IGGLE_MOD_NAME];
+    if (iggle_mods_world(id,NULL)) {
+        wchar_t key[66];
+        swprintf(key,ARRAYSIZE(key),L"igglemod-%hs.xml",id);
+        if (!_wcsicmp(name,key)) world=EDIT_WORLD_COUNT;
+    }
     for (int i = 1; i < EDIT_WORLD_COUNT; ++i)
         if (!_wcsicmp(world_keys[i], name)) world = i;
     SysFreeString(path);
@@ -245,7 +253,13 @@ const char *iggle_level_theme(const char *path)
         IXMLDOMDocument2_Release(doc);
     }
     if (SUCCEEDED(result)) CoUninitialize();
-    return theme_paths[world];
+    static char mod_theme[96];
+    char id[IGGLE_MOD_NAME];
+    if (world==EDIT_WORLD_COUNT && iggle_mods_world(id,NULL)) {
+        snprintf(mod_theme,sizeof mod_theme,"res/igglemods/world/%s/theme.xml",id);
+        return mod_theme;
+    }
+    return theme_paths[world<EDIT_WORLD_COUNT?world:0];
 }
 
 BOOL iggle_editor_open(const wchar_t *path)
@@ -374,12 +388,15 @@ static void attribute(IXMLDOMElement *node, const wchar_t *key, const wchar_t *t
 
 BOOL iggle_editor_set_world(int world)
 {
-    if (!document || world < 0 || world >= EDIT_WORLD_COUNT) return FALSE;
+    if (!document || world < 0 || world > EDIT_WORLD_COUNT) return FALSE;
+    char id[IGGLE_MOD_NAME];
+    if (world==EDIT_WORLD_COUNT && !iggle_mods_world(id,NULL)) return FALSE;
     IXMLDOMElement *root = NULL;
     IXMLDOMDocument2_get_documentElement(document, &root);
     if (!root) return FALSE;
-    wchar_t path[50];
-    swprintf(path,ARRAYSIZE(path),L"res\\Themes\\%ls",world_keys[world]);
+    wchar_t path[80];
+    if (world==EDIT_WORLD_COUNT) swprintf(path,ARRAYSIZE(path),L"res\\Themes\\igglemod-%hs.xml",id);
+    else swprintf(path,ARRAYSIZE(path),L"res\\Themes\\%ls",world_keys[world]);
     attribute(root,L"editorTheme",path);
     root->lpVtbl->Release(root);
     dirty = TRUE;

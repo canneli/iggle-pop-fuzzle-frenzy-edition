@@ -12,6 +12,7 @@
 #include "iggle_menu.h"
 #include "iggle_custom_levels.h"
 #include "iggle_level_editor.h"
+#include "iggle_mods.h"
 
 typedef void (__attribute__((thiscall)) *ActionFunction)(void *,void *);
 typedef void (__attribute__((thiscall)) *PhaseFunction)(void *);
@@ -137,7 +138,9 @@ typedef void (__attribute__((thiscall)) *QueueState)(void *, void *);
 
 static PhaseFunction original_test_init, original_test_enter;
 static ActionFunction original_test_action;
-static OpenStream original_open_stream;
+static OpenStream original_open_stream, original_raw_stream, original_archive_stream;
+typedef BYTE (__attribute__((thiscall)) *ResourceExists)(void *,const char *);
+static ResourceExists original_resource_exists;
 
 #ifdef IGGLE_CUSTOM_TEST
 static LONG CALLBACK trace_custom_exception(EXCEPTION_POINTERS *ex)
@@ -1186,6 +1189,48 @@ static GameString *__attribute__((thiscall)) selected_editor_theme(void *self, G
     return ((MakeString)(game_image + 0x3d30))(result, custom_theme);
 }
 
+static void *open_mod_file(const char *path)
+{
+    typedef void *(__attribute__((thiscall)) *StreamCtor)(void *, int);
+    typedef void (__attribute__((thiscall)) *StreamOpen)(void *, GameString *, GameString *);
+    typedef void *(__cdecl *GameAlloc)(size_t);
+    void *memory=((GameAlloc)(game_image+0xc0706))(0x18);
+    if (!memory) return NULL;
+    void *stream=((StreamCtor)(game_image+0xe1560))(memory,1);
+    GameString empty={.capacity=15},name={0};
+    ((MakeString)(game_image+0x3d30))(&name,path);
+    ((StreamOpen)(game_image+0xe1690))(stream,&empty,&name);
+    ((PhaseFunction)(game_image+0x4f890))(&name);
+    return stream;
+}
+
+static void *mod_raw_file(const char *path)
+{
+    char file[MAX_PATH];
+    if (!iggle_mods_resource(path,custom_running,file)) return NULL;
+    custom_trace(path);
+    return open_mod_file(file);
+}
+
+static BYTE __attribute__((thiscall)) resource_exists_hook(void *self,const char *path)
+{
+    char file[MAX_PATH];
+    if (iggle_mods_resource(path,custom_running,file)) return TRUE;
+    return original_resource_exists(self,path);
+}
+
+static void *__attribute__((thiscall)) raw_stream_hook(void *self,const char *path)
+{
+    void *stream=mod_raw_file(path);
+    return stream?stream:original_raw_stream(self,path);
+}
+
+static void *__attribute__((thiscall)) archive_stream_hook(void *self,const char *path)
+{
+    void *stream=mod_raw_file(path);
+    return stream?stream:original_archive_stream(self,path);
+}
+
 static void *__attribute__((thiscall)) open_stream_hook(void *manager, const char *path)
 {
     // Native campaign levels must never inherit the editor's object registry.
@@ -1196,29 +1241,20 @@ static void *__attribute__((thiscall)) open_stream_hook(void *manager, const cha
         custom_trace("native campaign objects only");
     }
 
-    if (custom_running && !_stricmp(path, custom_path)) {
-        custom_trace(path);
-        typedef void *(__attribute__((thiscall)) *StreamCtor)(void *, int);
-        typedef void (__attribute__((thiscall)) *StreamOpen)(void *, GameString *, GameString *);
-        typedef void *(__attribute__((thiscall)) *ParserStreamCtor)(void *, void *, int);
+    if (custom_running && path && !_stricmp(path,custom_path)) {
+        typedef void *(__attribute__((thiscall)) *ParserStreamCtor)(void *,void *,int);
         typedef void *(__cdecl *GameAlloc)(size_t);
-        void *adapter = ((GameAlloc)(game_image + 0xc0706))(0x18);
-        void *memory = ((GameAlloc)(game_image + 0xc0706))(0x18);
-        if (!memory || !adapter) {
-            void (__cdecl *release)(void *) = (void *)(game_image + 0xc0c51);
-            release(memory);
-            release(adapter);
+        void *adapter=((GameAlloc)(game_image+0xc0706))(0x18);
+        void *stream=adapter?open_mod_file(path):NULL;
+        if (!stream) {
+            if (adapter) ((void (__cdecl *)(void *))(game_image+0xc0c51))(adapter);
             return NULL;
         }
-        void *stream = ((StreamCtor)(game_image + 0xe1560))(memory, 1);
-        GameString empty = { .capacity = 15 }, name = {0};
-        ((MakeString)(game_image + 0x3d30))(&name, path);
-        ((StreamOpen)(game_image + 0xe1690))(stream, &empty, &name);
-        ((PhaseFunction)(game_image + 0x4f890))(&name);
-        custom_trace(*(void **)((BYTE *)stream + 0x0c) ? "disk file open" : "disk file missing");
-        return ((ParserStreamCtor)(game_image + 0xa7910))(adapter, stream, 1);
+        custom_trace(path);
+        custom_trace("disk file open");
+        return ((ParserStreamCtor)(game_image+0xa7910))(adapter,stream,1);
     }
-    return original_open_stream(manager, path);
+    return original_open_stream(manager,path);
 }
 
 static void __attribute__((thiscall)) custom_init_hook(void *state)
@@ -1549,6 +1585,11 @@ static void __attribute__((thiscall)) main_hook(void *self,void *action)
 #endif
 
     iggle_input_set_gameplay(FALSE);
+    if (action_is(action,"hdMods")) {
+        custom_menu_state=self;
+        iggle_open_mods(self);
+        return;
+    }
     if (action_is(action, "hdLanguage")) {
         PostMessageA(g_ddraw.hwnd, WM_APP + 0x483, 0, 0);
         return;
@@ -1884,6 +1925,16 @@ void iggle_install_game_hook(void)
     original_test_init = (PhaseFunction)init;
     original_test_enter = (PhaseFunction)enter;
     original_open_stream = (OpenStream)stream;
+    const BYTE raw_prefix[]={0x6a,0xff,0x68,0x18,0x96,0x50,0x00};
+    const BYTE archive_prefix[]={0x6a,0xff,0x68,0xf8,0x95,0x50,0x00};
+    BOOL raw_ok=install_action(base+0x96d10,raw_prefix,sizeof raw_prefix,
+        (ActionFunction)raw_stream_hook,(ActionFunction *)&original_raw_stream);
+    BOOL archive_ok=install_action(base+0x96c00,archive_prefix,sizeof archive_prefix,
+        (ActionFunction)archive_stream_hook,(ActionFunction *)&original_archive_stream);
+    const BYTE exists_prefix[]={0x6a,0xff,0x68,0x18,0x96,0x50,0x00};
+    BOOL exists_ok=install_action(base+0x96ee0,exists_prefix,sizeof exists_prefix,
+        (ActionFunction)resource_exists_hook,(ActionFunction *)&original_resource_exists);
+    if (raw_ok && archive_ok && exists_ok) iggle_mods_startup();
     custom_ready = init_ok && enter_ok && action_ok && stream_ok;
     const BYTE retro_prefix[] = {0x6a,0xff,0x68,0xbb,0x19,0x50,0x00};
     const BYTE bonus_prefix[] = {0x6a,0xff,0x68,0xff,0x0d,0x50,0x00};
@@ -1942,6 +1993,8 @@ BOOL iggle_custom_launch(void *menu)
     if (!menu || menu != custom_menu_state || !custom_ready || !iggle_custom_get_path(custom_path)) return FALSE;
     BYTE *game = *(BYTE **)((BYTE *)menu + 0x0c);
     if (!game) return FALSE;
+    EditorBoard collision_board;
+    if (!iggle_level_collision_board(custom_path,&collision_board)) return FALSE;
     typedef void *(__cdecl *GameAlloc)(size_t);
     void *memory = ((GameAlloc)(game_image + 0xc0706))(0x1c);
     if (!memory) return FALSE;

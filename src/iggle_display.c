@@ -13,11 +13,13 @@
 #include "iggle_custom_levels.h"
 #include "iggle_level_editor.h"
 #include "iggle_menu.h"
+#include "iggle_mods.h"
 
 static volatile LONG opened, hovered = -1;
 BOOL iggle_editor_is_open(void) { return InterlockedCompareExchange(&opened,0,0)==5; }
 BOOL iggle_overlay_is_open(void) { return InterlockedCompareExchange(&opened,0,0)!=0; }
 static int choice;
+static int mod_page, mod_count, mod_notice;
 static int custom_total, custom_page;
 static void *custom_menu;
 static BOOL custom_error;
@@ -57,7 +59,7 @@ static struct Art art[] = {{"menuwindowlarge"},{"orangebutton"},{"orangebuttonhi
  {"level-pop-green"},{"level-pop-blue"},{"level-pop-yellow"},{"level-pop-purple"},
  {"level-slow"},{"level-dragon"},{"level-rainbow-0"},{"level-rainbow-1"},
  {"editor-hudbg"},{"editor-modeselbtn"},{"editor-modeselbtnhi"},{"editor-modeselbtnchecked"},
- {"editor-editbtnbase"},{"editor-editbtnbasehi"},{"editor-imgframe"},{"editor-tinybtnbase"},{"rainbow-diamond"},{"rainbow-aura"},{"crystal-sparkle"}
+ {"editor-editbtnbase"},{"editor-editbtnbasehi"},{"editor-imgframe"},{"editor-tinybtnbase"},{"rainbow-diamond"},{"rainbow-aura"},{"crystal-sparkle"},{"mod-floor"},{"mod-filled"},{"mod-wall-h"},{"mod-wall-v"}
 };
 struct Vertex { float x,y,z,rhw; DWORD color; float u,v; };
 
@@ -65,9 +67,23 @@ void iggle_overlay_release(void) {
  for(int i=0;i<ARRAYSIZE(art);i++) if(art[i].tex) { IDirect3DTexture9_Release(art[i].tex);art[i].tex=NULL; }
 }
 static BOOL load_art(IDirect3DDevice9 *device,int i) {
- if(art[i].tex)return TRUE;
  char path[MAX_PATH];
  FILE *f = NULL;
+ if (!strncmp(art[i].name,"mod-",4)) {
+  const char *names[]={"mod-floor","mod-filled","mod-wall-h","mod-wall-v"};
+  static char last_path[4][MAX_PATH];
+  int tile=0;
+  while(tile<4 && strcmp(art[i].name,names[tile])) ++tile;
+  if (tile==4 || !iggle_mods_preview(tile,path)) return FALSE;
+  if (art[i].tex && strcmp(last_path[tile],path)) {
+   IDirect3DTexture9_Release(art[i].tex);
+   art[i].tex=NULL;
+  }
+  if(art[i].tex)return TRUE;
+  f=fopen(path,"rb");
+  if (!f) return FALSE;
+  strcpy(last_path[tile],path);
+ } else if(art[i].tex)return TRUE;
  if (strcmp(art[i].name, "level-freeze") == 0) {
   int lang = iggle_current_language();
   const char *prefix = lang == 1 ? "pt-BR" : lang == 2 ? "es" : NULL;
@@ -127,7 +143,7 @@ enum { ART_HERO=6, ART_ZOOG, ART_CAGE, ART_HOME=ART_CAGE+EDIT_COLOR_COUNT,
        ART_GUARD, ART_BOMBER, ART_GMZ, ART_FREEZE, ART_ZAP, ART_SORT, ART_POP,
        ART_SLOW=ART_POP+EDIT_COLOR_COUNT, ART_DRAGON, ART_RAINBOW, ART_RAINBOW_ALT,
        ART_EDITOR_HUD, ART_MODE, ART_MODE_HOVER, ART_MODE_CHECK, ART_EDITOR_BUTTON,
-       ART_EDITOR_BUTTON_HOVER, ART_EDITOR_FRAME, ART_EDITOR_ARROW, ART_DIAMOND, ART_AURA, ART_CRYSTAL_SPARKLE };
+       ART_EDITOR_BUTTON_HOVER, ART_EDITOR_FRAME, ART_EDITOR_ARROW, ART_DIAMOND, ART_AURA, ART_CRYSTAL_SPARKLE, ART_MOD_TILES };
 static const int monster_art[EDIT_ZOOG_COUNT] = {
  ART_ZOOG,ART_ZOOG,ART_BLOBBY,ART_BLOBBY,ART_SHOOTER,ART_ARMOR,ART_FIRE,ART_TUNNEL,ART_ZOOG,
  ART_GUARD,ART_GUARD,ART_BOMBER,ART_BOMBER,ART_BOMBER,ART_BOMBER,ART_BOMBER,ART_GMZ,ART_DRAGON
@@ -296,7 +312,13 @@ static void draw_level_editor(IDirect3DDevice9 *d)
  EditorBoard board;
  iggle_editor_board(&board);
  float left,top,step=editor_geometry(&board,&left,&top);
- int world_art=ART_WORLDS+board.world*ART_PER_WORLD;
+ int world_art=ART_WORLDS+min(board.world,EDIT_WORLD_COUNT-1)*ART_PER_WORLD;
+ char mod_world[IGGLE_MOD_NAME]="";
+ if (board.world==EDIT_WORLD_COUNT && iggle_mods_world(NULL,mod_world)) {
+  BOOL ready=TRUE;
+  for(int i=0;i<ART_PER_WORLD;++i) ready &= load_art(d,ART_MOD_TILES+i);
+  if (ready) world_art=ART_MOD_TILES;
+ }
  if (step>0) {
   rectangle(d,left-4,top-4,board.columns*step+8,board.rows*step+8,0xff315a28);
   for (int y=0;y<board.rows;++y) for (int x=0;x<board.columns;++x) {
@@ -370,7 +392,7 @@ static void draw_level_editor(IDirect3DDevice9 *d)
   struct Box action=editor_actions[i];
   BOOL arrow=i==EDIT_COMMAND_PREVIOUS || i==EDIT_COMMAND_NEXT;
   if (arrow && editor_tool!=EDIT_ZOOG && editor_tool!=EDIT_POWER && editor_tool!=EDIT_CAGE && editor_tool!=EDIT_HOME) continue;
-  const char *label=i==EDIT_COMMAND_WORLD?world_words[lang][board.world]:
+  const char *label=i==EDIT_COMMAND_WORLD?(mod_world[0]?mod_world:world_words[lang][min(board.world,EDIT_WORLD_COUNT-1)]):
                     i==EDIT_COMMAND_PREVIOUS?"<":i==EDIT_COMMAND_NEXT?">":labels[7+i];
   if (arrow && hovered==EDIT_TOOL_COUNT+i) rectangle(d,action.x-2,action.y-2,action.w+4,action.h+4,0xff8bdbff);
   image(d,arrow?ART_EDITOR_ARROW: hovered==EDIT_TOOL_COUNT+i?ART_EDITOR_BUTTON_HOVER:ART_EDITOR_BUTTON,
@@ -439,6 +461,39 @@ static void draw_diamond_effects(IDirect3DDevice9 *d,const IggleDiamondView *vie
  }
 }
 
+enum { MOD_PREV=5, MOD_NEXT, MOD_PLAY, MOD_BACK };
+static const struct Box mod_actions[]={{147,330,48,32},{445,330,48,32},{208,330,135,32},{351,330,83,32}};
+static struct Box mod_row(int i) { return (struct Box){151,112+i*37,338,30}; }
+static int mod_rows(void) { return max(0,min(5,mod_count-mod_page*5)); }
+
+static void draw_mods(IDirect3DDevice9 *d)
+{
+ int lang=iggle_current_language();
+ const char *const *words=(const char *const [3][8]){
+  {"World","Hero","On","Off","Play world","Back","Place .igglemod files in the mods folder.","Could not load this mod."},
+  {"Mundo","Her\xf3i","Ativo","Inativo","Jogar mundo","Voltar","Coloque arquivos .igglemod na pasta mods.","Falha ao carregar o mod."},
+  {"Mundo","H\xe9roe","Activo","Inactivo","Jugar mundo","Volver","Pon archivos .igglemod en la carpeta mods.","No se pudo cargar el mod."}
+ }[lang];
+ text(d,"Mods",320,75,1.18f);
+ for(int i=0;i<mod_rows();++i) {
+  IggleModInfo info;
+  if(!iggle_mods_info(mod_page*5+i,&info)) continue;
+  char label[94];
+  const char *name=info.name;
+  if(info.kind==IGGLE_MOD_WORLD && !strcmp(info.id,"sugar-grove"))
+   name=(const char *const[]){"Sugar Grove","Bosque de A\xe7\xfa" "car","Bosque de Az\xfa" "car"}[lang];
+  snprintf(label,sizeof label,"%s  /  %s  /  %s",words[info.kind==IGGLE_MOD_HERO],name,words[info.enabled?2:3]);
+  menu_button(d,mod_row(i),label,hovered==i,FALSE);
+ }
+ if(mod_count>5) {
+  menu_button(d,mod_actions[0],"<",hovered==MOD_PREV,FALSE);
+  menu_button(d,mod_actions[1],">",hovered==MOD_NEXT,FALSE);
+ }
+ if(iggle_mods_world(NULL,NULL)) menu_button(d,mod_actions[2],words[4],hovered==MOD_PLAY,FALSE);
+ menu_button(d,mod_actions[3],words[5],hovered==MOD_BACK,TRUE);
+ text(d,words[mod_notice?7:6],320,382,.58f);
+}
+
 void iggle_overlay_draw(IDirect3DDevice9*d){
  LONG page=InterlockedCompareExchange(&opened,0,0);
  IggleDiamondView view;
@@ -468,6 +523,10 @@ void iggle_overlay_draw(IDirect3DDevice9*d){
   IDirect3DStateBlock9_Apply(state);IDirect3DStateBlock9_Release(state);return;
  }
  image(d,0,125,57,389,366);
+ if(opened==6){
+  draw_mods(d);
+  IDirect3DStateBlock9_Apply(state);IDirect3DStateBlock9_Release(state);return;
+ }
  if(opened==4){
   draw_custom_levels(d);
   IDirect3DStateBlock9_Apply(state);IDirect3DStateBlock9_Release(state);return;
@@ -814,7 +873,8 @@ static void editor_activate(HWND hwnd,int index)
  case EDIT_COMMAND_WORLD: {
   EditorBoard board;
   iggle_editor_board(&board);
-  if (iggle_editor_set_world((board.world+1)%EDIT_WORLD_COUNT)) editor_notice=0;
+  int worlds=EDIT_WORLD_COUNT+iggle_mods_world(NULL,NULL);
+  if (iggle_editor_set_world((board.world+1)%worlds)) editor_notice=0;
   break;
  }
  case EDIT_COMMAND_BACK:
@@ -936,11 +996,61 @@ static BOOL editor_message(HWND hwnd,UINT msg,WPARAM key,LPARAM point)
  return TRUE;
 }
 
+static BOOL mod_button(int row)
+{
+ if (row<MOD_PREV) return row>=0 && row<mod_rows();
+ if (row<=MOD_NEXT) return mod_count>5;
+ return row==MOD_BACK || (row==MOD_PLAY && iggle_mods_world(NULL,NULL));
+}
+
+static void mods_activate(HWND hwnd,int row)
+{
+ if (!mod_button(row)) return;
+ if (row==MOD_BACK) finish_overlay(hwnd,0);
+ else if (row==MOD_PREV || row==MOD_NEXT) {
+  mod_page=max(0,min((mod_count-1)/5,mod_page+(row==MOD_NEXT?1:-1)));
+  hovered=0;
+ } else if (row==MOD_PLAY) {
+  wchar_t path[MAX_PATH];
+  if (iggle_mods_stage(path) && iggle_custom_select_path(path) && iggle_custom_launch(custom_menu))
+   finish_overlay(hwnd,0);
+  else mod_notice=1;
+ } else {
+  mod_notice=!iggle_mods_toggle(mod_page*5+row);
+  trace_editor("mod toggled",mod_page*5+row,mod_notice);
+ }
+}
+
+static BOOL mods_message(HWND hwnd,UINT msg,WPARAM key,LPARAM point)
+{
+ if(msg==WM_KEYDOWN) {
+  if(key==VK_ESCAPE) mods_activate(hwnd,MOD_BACK);
+  else if(key==VK_RETURN) mods_activate(hwnd,hovered);
+  else if(focus_direction(key)>=0) {
+   struct Box boxes[9];
+   int rows[9],count=0;
+   for(int i=0;i<=MOD_BACK;++i) if(mod_button(i)) {
+    rows[count]=i;
+    boxes[count++]=i<MOD_PREV?mod_row(i):mod_actions[i-MOD_PREV];
+   }
+   hovered=select_box(boxes,rows,count,hovered,focus_direction(key));
+  }
+ } else if (msg>=WM_MOUSEFIRST && msg<=WM_MOUSELAST) {
+  float x=(GET_X_LPARAM(point)-ui_x())/ui_scale(),y=(GET_Y_LPARAM(point)-ui_y())/ui_scale();
+  hovered=-1;
+  for(int i=0;i<=MOD_BACK;++i) if(mod_button(i) && inside(i<MOD_PREV?mod_row(i):mod_actions[i-MOD_PREV],x,y)) hovered=i;
+  if(msg==WM_LBUTTONUP) mods_activate(hwnd,hovered);
+ } else return msg>=WM_KEYFIRST && msg<=WM_KEYLAST;
+ ReleaseSemaphore(g_ddraw.render.sem,1,NULL);
+ return TRUE;
+}
+
 BOOL iggle_overlay_message(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp){
  if(!InterlockedCompareExchange(&opened,0,0)){
   if((LONG)(GetTickCount()-suppress_until)<0 && ((msg>=WM_KEYFIRST&&msg<=WM_KEYLAST)||(msg>=WM_MOUSEFIRST&&msg<=WM_MOUSELAST)))return TRUE;
   return FALSE;
  }
+ if(opened==6 && mods_message(hwnd,msg,wp,lp))return TRUE;
  if(opened==5 && editor_message(hwnd,msg,wp,lp))return TRUE;
  if(opened==4 && custom_message(hwnd,msg,wp,lp))return TRUE;
  if(msg==WM_KEYDOWN||msg==WM_SYSKEYDOWN){
@@ -1016,4 +1126,15 @@ void iggle_open_custom_levels(void *menu)
  open_overlay(4);
  if (opened == 4) refresh_library();
  trace_editor("open library",opened,custom_total);
+}
+
+void iggle_open_mods(void *menu)
+{
+ if (opened) return;
+ mod_count=iggle_mods_scan();
+ mod_page=mod_notice=0;
+ custom_menu=menu;
+ open_overlay(6);
+ hovered=mod_count?0:MOD_BACK;
+ ReleaseSemaphore(g_ddraw.render.sem,1,NULL);
 }

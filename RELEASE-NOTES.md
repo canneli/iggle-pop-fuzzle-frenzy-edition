@@ -1,19 +1,17 @@
 ## English
 
-- Three blue diamonds now slow all enemies for five seconds and grant a shield that lasts until it absorbs a fatal hit.
-- Breaking the shield grants the original 2.5-second protection window while the hero stays under player control. Absorbed hits leave the follower chain in place.
-- Diamonds now have cleaner edges and animated glints. Activation and shield break each have their own sound.
-- The Rainbow has an updated south-facing walking sprite.
-- The README includes individual illustrations of the restored content and in-game editor.
+- **Sugar Grove** adds a playable pink candy maze with strawberry terrain, icing walls and candy decorations.
+- The new **Mods** menu finds `.igglemod` packages in the game's `mods` folder. Enable one world and one Fizzy skin together, or use the active world in the level editor.
+- **Berry Fizzy** is an example skin built on Fizzy's original moves and attributes. Restart the game after changing skins to refresh loaded sprites.
+- The Windows installer includes both examples. The individual packages and the Python 3 packaging tool are also available below.
 
-Close the game, run the Windows patch and select the Steam installation of **Iggle Pop! Deluxe**.
+Close the game, run the Windows patch, select your **Iggle Pop! Deluxe** Steam installation and open **Mods**.
 
 ## Português (Brasil)
 
-- Três diamantes azuis desaceleram todos os inimigos por cinco segundos e ativam um escudo que dura até absorver um golpe fatal.
-- Ao quebrar, o escudo usa os 2,5 segundos de proteção padrão do jogo. O herói continua sob seu controle e o golpe absorvido preserva a fila.
-- Os diamantes ganharam contornos mais limpos e reflexos animados. A ativação e a quebra do escudo têm sons próprios.
-- O Rainbow ganhou um sprite atualizado ao andar para baixo.
-- O README ganhou imagens individuais do conteúdo restaurado e do editor integrado.
+- **Bosque de Açúcar** adiciona um labirinto jogável com piso de morango, paredes de glacê e confeitos.
+- O menu **Mods** carrega pacotes `.igglemod` da pasta `mods`. Dá para ativar um mundo e um visual do Fizzy juntos ou usar o tema ativo no editor.
+- O **Berry Fizzy** é um visual de exemplo que usa os movimentos e atributos originais do Fizzy. Reinicie o jogo depois de trocar de visual para recarregar os sprites.
+- O instalador inclui os dois exemplos. Os pacotes individuais e a ferramenta de criação para Python 3 também estão disponíveis abaixo.
 
-Feche o jogo, abra o patch do Windows e selecione a pasta do **Iggle Pop! Deluxe** da Steam.
+Feche o jogo, aplique o patch na instalação do **Iggle Pop! Deluxe** da Steam e abra **Mods**.

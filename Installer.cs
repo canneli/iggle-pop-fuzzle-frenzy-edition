@@ -22,7 +22,7 @@ internal static class Installer {
             string target = args.Length == 2 && args[0] == "--folder" ? args[1] : PickFolder();
             if (target == null) return;
             Install(Path.GetFullPath(target));
-            MessageBox.Show("Patch aplicado. Abra Fases personalizadas no menu inicial do jogo.",
+            MessageBox.Show("Patch aplicado. Abra Mods ou Fases personalizadas no menu inicial do jogo.",
                 "Iggle Pop 16:9", MessageBoxButtons.OK, MessageBoxIcon.Information);
         } catch (Exception error) {
             MessageBox.Show(error.Message, "Iggle Pop 16:9", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -92,12 +92,14 @@ internal static class Installer {
         files["iggle-hd/language.ini"] = System.Text.Encoding.ASCII.GetBytes("[language]\r\nindex=" + (active == "pt-BR" ? "1" : active == "es" ? "2" : "0") + "\r\n");
         files.Add(ArchiveName, files["iggle-hd/" + active + ".saf"]);
         files["splash/loadText.jpg"] = files["iggle-hd/" + active + "-loadText.jpg"];
-        var levels = Directory.CreateDirectory(Path.Combine(target, "CustomLevels"));
-        var access = levels.GetAccessControl();
-        access.SetAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null),
-            FileSystemRights.Modify, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
-            PropagationFlags.None, AccessControlType.Allow));
-        levels.SetAccessControl(access);
+        foreach (string folder in new[] {"CustomLevels", "mods"}) {
+            var directory = Directory.CreateDirectory(Path.Combine(target, folder));
+            var access = directory.GetAccessControl();
+            access.SetAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null),
+                FileSystemRights.Modify, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
+                PropagationFlags.None, AccessControlType.Allow));
+            directory.SetAccessControl(access);
+        }
         string transaction = Path.Combine(target, ".iggle-patch-" + Guid.NewGuid().ToString("N"));
         var applied = new List<string>();
         Directory.CreateDirectory(transaction);
@@ -105,6 +107,9 @@ internal static class Installer {
             foreach (var file in files) {
                 string relative = file.Key;
                 string current = Path.Combine(target, relative);
+                if ((relative.Equals("ddraw.ini", StringComparison.OrdinalIgnoreCase) ||
+                     relative.StartsWith("mods/", StringComparison.OrdinalIgnoreCase)) && File.Exists(current))
+                    continue;
                 string previous = Path.Combine(transaction, relative);
                 Directory.CreateDirectory(Path.GetDirectoryName(previous));
                 Directory.CreateDirectory(Path.GetDirectoryName(current));
@@ -126,6 +131,9 @@ internal static class Installer {
             foreach (string relative in applied) {
                 string previous = Path.Combine(transaction, relative);
                 string current = Path.Combine(target, relative);
+                if ((relative.Equals("ddraw.ini", StringComparison.OrdinalIgnoreCase) ||
+                     relative.StartsWith("mods/", StringComparison.OrdinalIgnoreCase)) && File.Exists(current))
+                    continue;
                 if (File.Exists(previous)) File.Copy(previous, current, true);
                 else File.Delete(current);
             }
