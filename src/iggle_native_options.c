@@ -184,7 +184,7 @@ static SpawnPickup original_spawn_pickup;
 static FindArt original_find_art;
 static FindArt original_find_particle;
 static void *blobby_eyes[3];
-static void *blobby_images[4][4];
+static void *blobby_images[4][8];
 static struct {void *sprite,*actor;float x,y;unsigned direction;DWORD next_turn;BOOL positioned;} blobby_drawables[EDIT_GRID_MAX*EDIT_GRID_MAX];
 static void *current_blobby_actor;
 static unsigned blobby_drawable_count;
@@ -215,6 +215,10 @@ static RainbowTrail rainbow_trails[ARRAYSIZE(rainbow_fuzzles)];
 static SRWLOCK diamond_lock=SRWLOCK_INIT;
 static IggleDiamondView diamonds;
 static float diamond_drop_delay;
+typedef void (__attribute__((thiscall)) *JewelScore)(void *,int,const float *);
+static JewelScore original_collect_jewel;
+static BOOL jewel_ready;
+static void __attribute__((thiscall)) collect_native_jewel(void *world,int points,const float *position);
 static PhaseFunction original_fuzzle_cleanup;
 static void remember_rainbow(void *fuzzle);
 static BOOL actor_position(void *actor,float *x,float *y);
@@ -473,7 +477,7 @@ static void __attribute__((thiscall)) init_blobby_art(void *self, void *args)
 
 static void __attribute__((thiscall)) tick_monster_art(void *self, void *frame)
 {
-    if(!custom_running) {original_monster_tick(self,frame);return;}
+    if(!custom_running && diamonds.aura<=0) {original_monster_tick(self,frame);return;}
     int previous = restored_art;
     void *body = *(void **)((BYTE *)self+0x4c);
     if (matches_spawn(body,ART_DRAGON)) restored_art=ART_DRAGON;
@@ -566,7 +570,7 @@ static void __attribute__((thiscall)) draw_restored_monster(void *sprite, void *
             direction=blobby_drawables[index].direction;
         }
         unsigned phase=(GetTickCount()+((uintptr_t)sprite%1100))%3600;
-        unsigned frame=phase<90?1:phase<180?2:phase<270?3:0;
+        unsigned frame=phase<90?1:phase<180?2:phase<270?3:4+(phase/125)%4;
         if(blobby_images[direction][frame]) *resource=blobby_images[direction][frame];
 #ifdef IGGLE_CUSTOM_TEST
         static unsigned directions_traced;
@@ -748,7 +752,7 @@ static void *__attribute__((thiscall)) find_restored_art(void *theme, GameString
         if (!strcmp(alias,"hdBlobbyEyesE")) blobby_eyes[1]=image;
         if (!strcmp(alias,"hdBlobbyEyesW")) blobby_eyes[2]=image;
         if(!blobby_images[0][0]) for(unsigned direction=0;direction<4;++direction) {
-            for(unsigned frame=0;frame<4;++frame) {
+            for(unsigned frame=0;frame<8;++frame) {
                 char label[20]; snprintf(label,sizeof label,"blobby%c%u","sewn"[direction],frame);
                 ((MakeString)(game_image+0x3d30))(&replacement,label);
                 blobby_images[direction][frame]=original_find_art(theme,&replacement);
@@ -831,12 +835,11 @@ static void step_rainbow_diamonds(void *hero, float dt)
     }
     diamond_drop_delay=max(0.f,diamond_drop_delay-dt);
 #ifdef IGGLE_CUSTOM_TEST
-    if (GetEnvironmentVariableA("IGGLE_DIAMOND_SMOKE",NULL,0)) {
-        static BOOL seeded=FALSE;
+    if (custom_running && GetEnvironmentVariableA("IGGLE_DIAMOND_SMOKE",NULL,0)) {
+        static BOOL seeded;
         if (!seeded) {
             seeded=TRUE;
             for (unsigned i=0;i<3;++i) diamonds.gems[diamonds.count++]=(IggleDiamond){x,y,0};
-            custom_trace("diamond test fixture seeded at player");
         }
     }
 #endif
@@ -844,16 +847,18 @@ static void step_rainbow_diamonds(void *hero, float dt)
         IggleDiamond *gem=&diamonds.gems[i];
         gem->age+=dt;
         float dx=x-gem->x,dy=y-gem->y;
-        if (gem->age < .55f || dx*dx+dy*dy > 19.f*19.f) { ++i; continue; }
+        BOOL picked=gem->age>=.55f && dx*dx+dy*dy<=19.f*19.f;
+        if (!picked && gem->age<15.f) { ++i; continue; }
+        float position[]={gem->x,gem->y};
         *gem=diamonds.gems[--diamonds.count];
-        custom_trace("rainbow diamond collected");
-        if (++diamonds.collected == 3) {
-            diamonds.collected=0;
-            diamonds.aura=7.f;
-            custom_trace("rainbow aura activated");
+        if (picked && custom_running && custom_game) {
+            void *world=*(void **)(custom_game+0xd8);
+            ReleaseSRWLockExclusive(&diamond_lock);
+            collect_native_jewel(world,100,position);
+            AcquireSRWLockExclusive(&diamond_lock);
         }
     }
-    if (diamond_drop_delay<=0 && diamonds.count<IGGLE_DIAMOND_LIMIT) {
+    if (jewel_ready && custom_running && custom_game && diamonds.count<IGGLE_DIAMOND_LIMIT && diamond_drop_delay<=0) {
         for (unsigned i=0;i<rainbow_fuzzle_count;++i) {
             BYTE *fuzzle=rainbow_fuzzles[i];
             RainbowTrail *trail=&rainbow_trails[i];
@@ -892,12 +897,25 @@ static void step_rainbow_diamonds(void *hero, float dt)
             float dx=x-gx,dy=y-gy;
             if (dx*dx+dy*dy < 32.f*32.f) continue;
             diamonds.gems[diamonds.count++]=(IggleDiamond){gx,gy,0};
+            custom_trace("rainbow diamond dropped");
             trail->steps=0;
             diamond_drop_delay=8.f;
-            custom_trace("rainbow diamond dropped");
             break;
         }
     }
+    ReleaseSRWLockExclusive(&diamond_lock);
+}
+
+static void __attribute__((thiscall)) collect_native_jewel(void *world,int points,const float *position)
+{
+    original_collect_jewel(world,points,position);
+    AcquireSRWLockExclusive(&diamond_lock);
+    if (++diamonds.collected==3) {
+        diamonds.collected=0;
+        diamonds.aura=7.f;
+        custom_trace("rainbow aura activated");
+    }
+    custom_trace("native jewel collected");
     ReleaseSRWLockExclusive(&diamond_lock);
 }
 
@@ -951,9 +969,9 @@ static void __attribute__((thiscall)) fireball_player_hit(void *state, void *tar
 
 static void __attribute__((thiscall)) step_dragon_slow_player(void *player, void *frame)
 {
-    if(custom_running && *(BYTE **)player==game_image+0x112358) current_player=player;
+    if(*(BYTE **)player==game_image+0x112358) current_player=player;
     float frame_seconds=*(float *)((BYTE *)frame+8);
-    if (custom_running && custom_game && player==current_player && !in_pause_menu && !custom_exit_pending &&
+    if (player==current_player && !in_pause_menu && !custom_exit_pending &&
         frame_seconds>0.f && frame_seconds<.5f && (rainbow_fuzzle_count || diamonds.count || diamonds.aura>0 || diamonds.collected))
         step_rainbow_diamonds(player,frame_seconds);
     if(player!=dragon_slow_player || dragon_slow_seconds<=0) {original_player_step(player,frame);return;}
@@ -1527,6 +1545,8 @@ static void install_restored_objects(BYTE *base)
     const BYTE dragon_init[] = {0x6a,0xff,0x68,0x52,0x3f,0x50,0x00};
     const BYTE make_sprite[] = {0x6a,0xff,0x68,0x24,0x83,0x50,0x00};
     const BYTE sprite_draw[] = {0x56,0x8b,0xf1,0x8b,0x06};
+    const BYTE collect_jewel[]={0x51,0x56,0x68,0,0,0x80,0x3f};
+    jewel_ready=install_action(base+0x338d0,collect_jewel,sizeof collect_jewel,(ActionFunction)collect_native_jewel,(ActionFunction *)&original_collect_jewel);
     const BYTE world_step[] = {0x83,0xec,0x08,0x55,0x8b,0x6c,0x24,0x10};
     if (!install_action(base+0x24ae0, art, sizeof art, (ActionFunction)find_restored_art, (ActionFunction *)&original_find_art)) return;
     install_action(base+0x24b30, particle_lookup, sizeof particle_lookup,

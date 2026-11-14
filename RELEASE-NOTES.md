@@ -1,21 +1,13 @@
 ## English
 
-Windows patch for the Steam edition of Iggle Pop! Deluxe.
+- Blobby has a fuller body and a larger portrait in the level editor. Amber bubbles trail behind him, inspired by the Tracker.
+- The original blue diamonds still award points. Collect three to activate a seven-second aura that slows nearby enemies. Rainbows occasionally leave a diamond with the same sprite and point value.
 
-- 16:9 playfield, 1080p and optional AMD FSR 1.
-- In-game language selection, controller and WASD support, and separate sound and music controls.
-- Integrated custom level editor and library.
-- Restored enemies and pickups, with rare Rainbow diamonds and a temporary aura.
-
-Close the game and point the installer to your existing Steam installation. See the [README](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition#readme) for screenshots, design notes and installation instructions.
+Close the game and point the Windows installer to your Steam installation of **Iggle Pop! Deluxe**. See the [README](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition#readme) for screenshots and instructions.
 
 ## Português (Brasil)
 
-Patch para Windows da edição Steam de **Iggle Pop! Deluxe**.
+- O Blobby ganhou um corpo mais cheio e uma miniatura maior no editor. As bolhas cor de âmbar ficam atrás dele, inspiradas na trilha do Rastreador.
+- Os diamantes azuis originais continuam dando pontos. A cada três, a aura desacelera os inimigos próximos por sete segundos. Os Rainbows às vezes deixam um diamante com o mesmo sprite e a mesma pontuação.
 
-- Campo de jogo em 16:9, 1080p e AMD FSR 1 opcional.
-- Seleção de idioma dentro do jogo, controle, WASD e ajustes separados de som e música.
-- Biblioteca e editor de fases personalizados integrados ao jogo.
-- Inimigos e poderes restaurados, diamantes raros dos Rainbows e uma aura temporária.
-
-Feche o jogo e selecione a pasta da sua instalação Steam no instalador. Veja os prints, as escolhas de design e o passo a passo no [README em português](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition#português-brasil).
+Feche o jogo e selecione a pasta do **Iggle Pop! Deluxe** da Steam no instalador. Confira os prints e as instruções no [README em português](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition#português-brasil).

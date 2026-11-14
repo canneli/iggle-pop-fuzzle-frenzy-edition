@@ -46,11 +46,13 @@ The picker lets you choose which power-up to place on the board. The five stage 
 
 ### Rainbows, diamonds and the hero’s glow
 
-![A dropped diamond beside the hero while the glowing aura is active](docs/images/aura.png)
+![A custom-stage screenshot from v24 showing the glowing aura](docs/images/aura.png)
 
-Rainbows join the line like the other Iggles. Occasionally, one leaves a diamond behind, giving you a reason to revisit part of the maze. Collect three to activate a **seven-second** aura that slows nearby enemies. The ring of light and sparks shows when the effect is active.
+The original blue diamonds still award points. Collect three to activate a **seven-second** aura that slows nearby enemies. Rainbows join the line and occasionally leave a diamond with the same sprite and point value. The ring of light and sparks shows when the effect is active.
 
-**Blobby** has an orange body, animated eyes and its own trail. The **Dragon** has its own movement and attack animations. Its purple fire briefly slows the player. Both appear in custom stages.
+![Blobby animation frames in four directions](docs/images/blobby-sprites.png)
+
+**Blobby** has a fuller orange body, animated eyes and a larger portrait in the editor. Amber bubbles trail behind him, inspired by the Tracker's particles. The **Dragon** has its own movement and attack animations. Its purple fire briefly slows the player. Both appear in custom stages.
 
 ### Localized artwork
 
@@ -63,11 +65,11 @@ The localized Freeze badges keep the jagged silhouette and blue outline. The loa
 ## Installation
 
 1. Install **Iggle Pop! Deluxe on Steam** and close the game.
-2. Download `Iggle-Pop-Fuzzle-Frenzy-Edition-v24.exe` from the [latest release](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition/releases/latest).
+2. Download `Iggle-Pop-Fuzzle-Frenzy-Edition-v25.exe` from the [latest release](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition/releases/latest).
 3. Run the installer and select your Steam game folder.
 4. Launch from Steam. Open **Options** for video, audio and controls, **Language** to choose a translation, or **Custom Levels** to play and edit stages.
 
-The installer checks the Steam game files and backs up the files it replaces in `IgglePop-HD-original`. The patch requires an existing Steam installation. Version v24 is single-player.
+The installer checks the Steam game files and backs up the files it replaces in `IgglePop-HD-original`. The patch requires an existing Steam installation. Version v25 is single-player.
 
 ## Credits
 
@@ -126,11 +128,13 @@ A paleta permite escolher o poder antes de colocá-lo no chão. Os cinco temas r
 
 #### Rainbow, diamantes e o brilho do herói
 
-![Aura luminosa em volta do herói em uma fase personalizada](docs/images/aura.png)
+![Print da aura luminosa em uma fase personalizada na v24](docs/images/aura.png)
 
-Os Rainbows seguem a fila como os outros Iggles. De vez em quando, um deles deixa um diamante no caminho, então vale passar de novo por um trecho já explorado. Ao recolher três, o herói ganha **sete segundos** de aura luminosa que desacelera os vilões próximos. Os brilhos indicam que o efeito está ativo.
+Os diamantes azuis originais continuam dando pontos. Ao recolher três, o herói ganha **sete segundos** de aura luminosa que desacelera os vilões próximos. Os Rainbows seguem a fila e às vezes deixam um diamante com o mesmo sprite e a mesma pontuação. Os brilhos indicam que o efeito está ativo.
 
-O **Blobby** tem corpo laranja, olhos animados e uma trilha própria. O **Dragão** tem movimento e animação de ataque próprios. O fogo roxo desacelera o jogador por um curto período. Esses elementos vão nas fases personalizadas.
+![Quadros da animação do Blobby nas quatro direções](docs/images/blobby-sprites.png)
+
+O **Blobby** tem o corpo laranja mais cheio, olhos animados e uma miniatura maior no editor. As bolhas cor de âmbar ficam na trilha atrás dele, inspirada nas partículas do Rastreador. O **Dragão** tem movimento e animação de ataque próprios. O fogo roxo desacelera o jogador por um curto período. Esses elementos vão nas fases personalizadas.
 
 #### Tradução também na arte
 
@@ -143,11 +147,11 @@ O selo de gelo mantém a silhueta irregular e o contorno azul. O texto da tela d
 ### Instalação
 
 1. Instale o **Iggle Pop! Deluxe da Steam** e feche o jogo.
-2. Baixe `Iggle-Pop-Fuzzle-Frenzy-Edition-v24.exe` na [release](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition/releases/latest).
+2. Baixe `Iggle-Pop-Fuzzle-Frenzy-Edition-v25.exe` na [release](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition/releases/latest).
 3. Abra o instalador e selecione a pasta do jogo.
 4. Inicie pela Steam. Use **Opções** para vídeo, áudio e controles, **Idioma** para tradução e **Fases personalizadas** para jogar ou editar mapas.
 
-O instalador valida os arquivos da edição Steam, faz uma cópia dos arquivos que substitui em `IgglePop-HD-original` e aplica o patch sobre a instalação existente. O download contém o mod e requer os arquivos do jogo. A versão v24 é para um jogador.
+O instalador valida os arquivos da edição Steam, faz uma cópia dos arquivos que substitui em `IgglePop-HD-original` e aplica o patch sobre a instalação existente. O download contém o mod e requer os arquivos do jogo. A versão v25 é para um jogador.
 
 ### Créditos
 

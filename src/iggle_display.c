@@ -276,7 +276,8 @@ static void draw_editor_picker(IDirect3DDevice9 *d,int lang)
  for(int i=0;i<picker_count();++i) {
   struct Box slot=picker_box(i);
   image(d,picker_focus==i?2:1,slot.x,slot.y,slot.w,slot.h);
-  if (monsters) image(d,monster_art[i],slot.x+8,slot.y+3,25,25);
+  if (monsters && monster_art[i]==ART_BLOBBY) image(d,ART_BLOBBY,slot.x+5,slot.y+1,33,30);
+  else if (monsters) image(d,monster_art[i],slot.x+8,slot.y+3,25,25);
   else draw_power_icon(d,power_art(i,editor_color),slot.x+8,slot.y+3,25);
   text(d,monsters?monster_words[lang][i]:power_words[lang][i],slot.x+82,slot.y+8,.57f);
  }
@@ -402,7 +403,9 @@ static void draw_diamond_effects(IDirect3DDevice9 *d,const IggleDiamondView *vie
  for (unsigned i=0;i<view->count;++i) {
   const IggleDiamond *gem=&view->gems[i];
   float bob=2.f*sinf(gem->age*4.f);
-  quad(d,art[ART_DIAMOND].tex,ox+(gem->x-11)*sx,oy+(gem->y-13+bob)*sy,22*sx,22*sy,0xffffffff,0,0,1,1);
+  unsigned alpha=gem->age>12 && ((int)(gem->age*8)&1)?105:255;
+  quad(d,art[ART_DIAMOND].tex,ox+(gem->x-14)*sx,oy+(gem->y-13+bob)*sy,
+       29*sx,27*sy,(alpha<<24)|0xffffff,0,0,1,1);
  }
  for (unsigned i=0;i<3;++i) {
   unsigned alpha=i<view->collected?255:70;
