@@ -1,17 +1,13 @@
 ## English
 
-- **Sugar Grove** adds a playable pink candy maze with strawberry terrain, icing walls and candy decorations.
-- The new **Mods** menu finds `.igglemod` packages in the game's `mods` folder. Enable one world and one Fizzy skin together, or use the active world in the level editor.
-- **Berry Fizzy** is an example skin built on Fizzy's original moves and attributes. Restart the game after changing skins to refresh loaded sprites.
-- The Windows installer includes both examples. The individual packages and the Python 3 packaging tool are also available below.
-
-Close the game, run the Windows patch, select your **Iggle Pop! Deluxe** Steam installation and open **Mods**.
+- Custom stages now load through the game's resource loader using a consistent path, including Sugar Grove and levels made in the built-in editor.
+- The bonus intro closes when the native countdown ends.
+- Cherry Fizzy has cherry-red fur, a cream-and-green helmet and a green propeller. All four directions use the original transparency masks.
+- This update replaces the bundled v29 skin when its file is still the original. Existing mod selections, custom packages and player saves are preserved.
 
 ## Português (Brasil)
 
-- **Bosque de Açúcar** adiciona um labirinto jogável com piso de morango, paredes de glacê e confeitos.
-- O menu **Mods** carrega pacotes `.igglemod` da pasta `mods`. Dá para ativar um mundo e um visual do Fizzy juntos ou usar o tema ativo no editor.
-- O **Berry Fizzy** é um visual de exemplo que usa os movimentos e atributos originais do Fizzy. Reinicie o jogo depois de trocar de visual para recarregar os sprites.
-- O instalador inclui os dois exemplos. Os pacotes individuais e a ferramenta de criação para Python 3 também estão disponíveis abaixo.
-
-Feche o jogo, aplique o patch na instalação do **Iggle Pop! Deluxe** da Steam e abra **Mods**.
+- As fases personalizadas agora usam um caminho consistente no carregador de recursos do jogo, incluindo o Bosque de Açúcar e as fases feitas no editor integrado.
+- O aviso da fase bônus fecha ao fim da contagem regressiva do jogo.
+- O Cherry Fizzy ganhou pelo vermelho-cereja, capacete creme e verde e hélice verde. As quatro direções usam as máscaras de transparência originais.
+- O instalador atualiza a skin do v29 quando o arquivo é o original distribuído. As seleções de mods, os pacotes personalizados e os saves são preservados.

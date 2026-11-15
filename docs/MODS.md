@@ -1,6 +1,6 @@
 # Creating Iggle Pop mods
 
-Install v29 or later. Place `.igglemod` files in the `mods` folder inside the Steam game directory. Open **Mods** on the main menu to refresh the list. One world and one Fizzy skin can be active together. Restart the game after switching skins to refresh loaded sprites.
+Install v30 or later. Place `.igglemod` files in the `mods` folder inside the Steam game directory. Open **Mods** on the main menu to refresh the list. One world and one Fizzy skin can be active together. Restart the game after switching skins to refresh loaded sprites.
 
 ## Make a package
 

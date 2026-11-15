@@ -78,7 +78,9 @@ static BOOL parse(FILE *input, IggleModInfo *info, ModFile files[FILE_LIMIT], ui
 
 static BOOL path_join(char result[MAX_PATH],const char *dir,const char *name)
 {
-    int n=snprintf(result,MAX_PATH,"%s\\%s",dir,name);
+    size_t length = strlen(dir);
+    BOOL has_separator = length && (dir[length - 1] == '\\' || dir[length - 1] == '/');
+    int n=snprintf(result,MAX_PATH,"%s%s%s",dir,has_separator ? "" : "\\",name);
     return n>0 && n<MAX_PATH;
 }
 

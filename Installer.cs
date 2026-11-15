@@ -15,6 +15,7 @@ internal static class Installer {
     const string ArchiveName = "IgglePop.saf";
     const string Backup = "IgglePop-HD-original";
     const string Steam = @"C:\Program Files (x86)\Steam\steamapps\common\Iggle Pop Deluxe";
+    const string OldBerrySkinHash = "9e952b3aa5d62514a26356a23de702a72f38580f55c435004663f0d7626a6a09";
 
     [STAThread]
     private static void Main(string[] args) {
@@ -107,7 +108,9 @@ internal static class Installer {
             foreach (var file in files) {
                 string relative = file.Key;
                 string current = Path.Combine(target, relative);
-                if ((relative.Equals("ddraw.ini", StringComparison.OrdinalIgnoreCase) ||
+                bool upgradeBerry = relative.Equals("mods/Berry-Fizzy.igglemod", StringComparison.OrdinalIgnoreCase)
+                    && File.Exists(current) && Hash(File.ReadAllBytes(current)) == OldBerrySkinHash;
+                if (!upgradeBerry && (relative.Equals("ddraw.ini", StringComparison.OrdinalIgnoreCase) ||
                      relative.StartsWith("mods/", StringComparison.OrdinalIgnoreCase)) && File.Exists(current))
                     continue;
                 string previous = Path.Combine(transaction, relative);

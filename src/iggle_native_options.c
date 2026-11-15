@@ -25,10 +25,14 @@ static void *custom_state, *custom_menu_state;
 static BYTE *custom_game;
 static BOOL custom_completed;
 static char custom_path[MAX_PATH];
+static const char custom_level_resource[] = "res/igglemods/custom-stage.xml";
 static BOOL custom_running, custom_ready, custom_exit_pending;
 static BOOL loading_custom_objects;
 static const char *custom_theme;
 static DWORD saved_level_index, saved_level_number;
+#ifdef IGGLE_CUSTOM_TEST
+static void custom_trace(const char *message);
+#endif
 static void __attribute__((thiscall)) phase_hook(void *self) {
     ((PhaseFunction)original_phase)(self);
     in_pause_menu = FALSE;
@@ -54,15 +58,24 @@ static void __attribute__((thiscall)) bonus_hook(void *self)
 
 static void __attribute__((thiscall)) active_update_hook(void *phase, void *frame)
 {
-    // The active gameplay update is reached after the intro. Its bonus screen
-    // can still be attached, so hide it using the engine's own visibility setter.
-    void *bonus_screen = *(void **)((BYTE *)phase + 0x12c);
+    ((PhaseUpdate)original_active_update)(phase, frame);
+    BYTE *world = phase;
+    if (world[0x14d]) return; // The engine is still counting down.
+
+    void *bonus_screen = *(void **)(world + 0x12c);
     if (bonus_screen && *(void **)bonus_screen == game_image + 0x116e20) {
         typedef void (__attribute__((thiscall)) *SetVisible)(void *, BOOL);
-        SetVisible set_visible = (SetVisible)(game_image + 0x81df0);
-        set_visible(bonus_screen, FALSE);
+        // Toggle the attached screen through its native visibility method.
+        void **vtable = *(void ***)bonus_screen;
+#ifdef IGGLE_CUSTOM_TEST
+        BOOL was_visible = !(*(DWORD *)((BYTE *)bonus_screen + 0x74) & 1);
+#endif
+        ((SetVisible)vtable[0x78 / sizeof(void *)])(bonus_screen, FALSE);
+#ifdef IGGLE_CUSTOM_TEST
+        if (was_visible && (*(DWORD *)((BYTE *)bonus_screen + 0x74) & 1))
+            custom_trace("bonus banner hidden after countdown");
+#endif
     }
-    ((PhaseUpdate)original_active_update)(phase, frame);
 }
 
 // This screen loader takes the game's 28-byte string by value.
@@ -94,9 +107,6 @@ static void track_menu_screen(void *screen,const char *path)
     strcpy(native_screens[i].name,name);
 }
 
-#ifdef IGGLE_CUSTOM_TEST
-static void custom_trace(const char *message);
-#endif
 static void reset_restored_objects(void);
 static void reset_crystal_power(void);
 static BOOL action_is(void *action, const char *label);
@@ -1204,8 +1214,20 @@ static void *open_mod_file(const char *path)
     return stream;
 }
 
+static BOOL is_custom_level_resource(const char *path)
+{
+    if (!custom_running || !path) return FALSE;
+    for (const char *expected = custom_level_resource; ; ++expected, ++path) {
+        char ch = *path == '\\' ? '/' : *path;
+        if (ch >= 'A' && ch <= 'Z') ch += 'a' - 'A';
+        if (ch != *expected) return FALSE;
+        if (!ch) return TRUE;
+    }
+}
+
 static void *mod_raw_file(const char *path)
 {
+    if (is_custom_level_resource(path)) return open_mod_file(custom_path);
     char file[MAX_PATH];
     if (!iggle_mods_resource(path,custom_running,file)) return NULL;
     custom_trace(path);
@@ -1214,6 +1236,7 @@ static void *mod_raw_file(const char *path)
 
 static BYTE __attribute__((thiscall)) resource_exists_hook(void *self,const char *path)
 {
+    if (is_custom_level_resource(path)) return TRUE;
     char file[MAX_PATH];
     if (iggle_mods_resource(path,custom_running,file)) return TRUE;
     return original_resource_exists(self,path);
@@ -1239,13 +1262,14 @@ static void *__attribute__((thiscall)) open_stream_hook(void *manager, const cha
         custom_running=FALSE;loading_custom_objects=FALSE;
         reset_restored_objects();
         custom_trace("native campaign objects only");
+        custom_trace(path);
     }
 
-    if (custom_running && path && !_stricmp(path,custom_path)) {
+    if (is_custom_level_resource(path)) {
         typedef void *(__attribute__((thiscall)) *ParserStreamCtor)(void *,void *,int);
         typedef void *(__cdecl *GameAlloc)(size_t);
         void *adapter=((GameAlloc)(game_image+0xc0706))(0x18);
-        void *stream=adapter?open_mod_file(path):NULL;
+        void *stream=adapter?open_mod_file(custom_path):NULL;
         if (!stream) {
             if (adapter) ((void (__cdecl *)(void *))(game_image+0xc0c51))(adapter);
             return NULL;
@@ -1322,7 +1346,7 @@ static void __attribute__((thiscall)) custom_enter_hook(void *state)
         BYTE *game = *(BYTE **)((BYTE *)state + 0x0c);
         void *world = *(void **)(game + 0xd8);
         GameString path = {0};
-        ((MakeString)(game_image + 0x3d30))(&path, custom_path);
+        ((MakeString)(game_image + 0x3d30))(&path, custom_level_resource);
         void **vtable = *(void ***)world;
 #ifdef IGGLE_CUSTOM_TEST
         void *exception_probe = AddVectoredExceptionHandler(1, trace_custom_exception);
