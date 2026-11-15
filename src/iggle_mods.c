@@ -11,11 +11,16 @@ static const char *const world_files[]={
     "stage.xml","themebg.jpg","hwallsegment.jpg","_hwallsegment.png",
     "vwallsegment.jpg","_vwallsegment.png","wallpost.jpg","_wallpost.png",
     "filledtile.jpg","_filledtile.png","heart.jpg","_heart.png",
-    "swirl.jpg","_swirl.png","floor.rgba","filled.rgba","wallh.rgba","wallv.rgba"
+    "swirl.jpg","_swirl.png","floor.rgba","filled.rgba","wallh.rgba","wallv.rgba",
+    "floortile0.jpg","floortile1.jpg"
 };
 static const char *const hero_files[]={
     "fizzynorth0.jpg","_fizzynorth0.png","fizzysouth0.jpg","_fizzysouth0.png",
-    "fizzyeast0.jpg","_fizzyeast0.png","fizzywest0.jpg","_fizzywest0.png"
+    "fizzyeast0.jpg","_fizzyeast0.png","fizzywest0.jpg","_fizzywest0.png",
+    "fizzynorth1.jpg","_fizzynorth1.png","fizzynorth2.jpg","_fizzynorth2.png",
+    "fizzysouth1.jpg","_fizzysouth1.png",
+    "fizzyeast1.jpg","_fizzyeast1.png","fizzyeast2.jpg","_fizzyeast2.png",
+    "fizzywest1.jpg","_fizzywest1.png","fizzywest2.jpg","_fizzywest2.png"
 };
 typedef struct {
     IggleModInfo info;
@@ -57,7 +62,7 @@ static BOOL parse(FILE *input, IggleModInfo *info, ModFile files[FILE_LIMIT], ui
     long size=ftell(input);
     if (size<75 || size>MOD_BYTES || fseek(input,75,SEEK_SET)) return FALSE;
     const char *const *allowed=kind==IGGLE_MOD_WORLD?world_files:hero_files;
-    unsigned required=kind==IGGLE_MOD_WORLD?ARRAYSIZE(world_files):ARRAYSIZE(hero_files);
+    unsigned allowed_count=kind==IGGLE_MOD_WORLD?ARRAYSIZE(world_files):ARRAYSIZE(hero_files);
     uint64_t seen=0;
     for (unsigned i=0;i<*entries;++i) {
         ModFile *file=&files[i];
@@ -66,14 +71,18 @@ static BOOL parse(FILE *input, IggleModInfo *info, ModFile files[FILE_LIMIT], ui
             fread(&file->size,4,1,input)!=1 || !file->size || file->size>MOD_BYTES)
             return FALSE;
         unsigned index=0;
-        while (index<required && strcmp(file->path,allowed[index])) ++index;
-        if (index==required || (seen & (UINT64_C(1)<<index))) return FALSE;
+        while (index<allowed_count && strcmp(file->path,allowed[index])) ++index;
+        if (index==allowed_count || (seen & (UINT64_C(1)<<index))) return FALSE;
         seen |= UINT64_C(1)<<index;
         file->offset=ftell(input);
         if ((uint64_t)file->offset+file->size>(uint64_t)size || fseek(input,file->size,SEEK_CUR))
             return FALSE;
     }
-    return ftell(input)==size && seen==((UINT64_C(1)<<required)-1);
+    if (ftell(input) != size) return FALSE;
+    const uint64_t all_frames = (UINT64_C(1) << allowed_count) - 1;
+    const uint64_t first_frames = (UINT64_C(1) << 8) - 1;
+    const uint64_t legacy_world = (UINT64_C(1) << (ARRAYSIZE(world_files) - 2)) - 1;
+    return seen == all_frames || seen == (kind == IGGLE_MOD_HERO ? first_frames : legacy_world);
 }
 
 static BOOL path_join(char result[MAX_PATH],const char *dir,const char *name)
@@ -296,6 +305,10 @@ BOOL iggle_mods_resource(const char *resource,BOOL world,char path[MAX_PATH])
             strlen(selected)!=(size_t)(slash-id) || _strnicmp(id,selected,slash-id)) return FALSE;
         name=slash+1;
         if (!_stricmp(name,"theme.xml")) return mounted_path(IGGLE_MOD_WORLD,"theme.xml",path);
+        // Retail probes these files in order before it can draw any <floor> cells.
+        if (!_stricmp(name,"floortile0.jpg") || !_stricmp(name,"floortile1.jpg"))
+            return mounted_path(IGGLE_MOD_WORLD,name,path) ||
+                mounted_path(IGGLE_MOD_WORLD,"filledtile.jpg",path);
         for (unsigned i=0;i<ARRAYSIZE(world_files);++i)
             if (!_stricmp(name,world_files[i])) return mounted_path(IGGLE_MOD_WORLD,world_files[i],path);
     }

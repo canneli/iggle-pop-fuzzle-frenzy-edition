@@ -1,13 +1,13 @@
 ## English
 
-- Custom stages now load through the game's resource loader using a consistent path, including Sugar Grove and levels made in the built-in editor.
-- The bonus intro closes when the native countdown ends.
-- Cherry Fizzy has cherry-red fur, a cream-and-green helmet and a green propeller. All four directions use the original transparency masks.
-- This update replaces the bundled v29 skin when its file is still the original. Existing mod selections, custom packages and player saves are preserved.
+- Fixed custom levels with right or bottom border edges from older editors. The game skips those entries in a temporary play copy and preserves the original level file.
+- Sugar Grove now supplies both floor textures used by the built-in editor.
+- Strawberry Lollipop gives Fizzy a peppermint costume and a strawberry cap. All 11 animation poses use the costume, so the default look stays out of the animation.
+- The installer updates the bundled world and skin while preserving active mod settings and custom packs.
 
 ## Português (Brasil)
 
-- As fases personalizadas agora usam um caminho consistente no carregador de recursos do jogo, incluindo o Bosque de Açúcar e as fases feitas no editor integrado.
-- O aviso da fase bônus fecha ao fim da contagem regressiva do jogo.
-- O Cherry Fizzy ganhou pelo vermelho-cereja, capacete creme e verde e hélice verde. As quatro direções usam as máscaras de transparência originais.
-- O instalador atualiza a skin do v29 quando o arquivo é o original distribuído. As seleções de mods, os pacotes personalizados e os saves são preservados.
+- Corrigido o carregamento de fases personalizadas com paredes nas bordas direita ou inferior criadas em versões anteriores. O jogo ignora essas entradas em uma cópia temporária e preserva o arquivo original.
+- O Bosque de Açúcar agora inclui as duas texturas de piso usadas no editor.
+- A fantasia Pirulito de Morango veste o Fizzy de pirulito e chapéu de morango em todos os 11 quadros da animação.
+- O instalador atualiza o mundo e a skin incluídos e preserva as configurações de mods e os pacotes personalizados.

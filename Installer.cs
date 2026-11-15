@@ -15,6 +15,8 @@ internal static class Installer {
     const string ArchiveName = "IgglePop.saf";
     const string Backup = "IgglePop-HD-original";
     const string Steam = @"C:\Program Files (x86)\Steam\steamapps\common\Iggle Pop Deluxe";
+    const string OldSugarGroveHash = "0eb71343318e238a4a4cc6575c2cbb7fc20d625478030c75b6ca800713f25ed2";
+    const string CherryV30Hash = "e1355a0f3ddc54534e2e9238d6d9bb5c2633fdba67ddd8d46cb5ff24f8ee822b";
     const string OldBerrySkinHash = "9e952b3aa5d62514a26356a23de702a72f38580f55c435004663f0d7626a6a09";
 
     [STAThread]
@@ -40,6 +42,14 @@ internal static class Installer {
     }
     static string Hash(byte[] bytes) {
         using (var sha = SHA256.Create()) return BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant();
+    }
+    static bool IsOldBundledMod(string relative, string path) {
+        if (!File.Exists(path)) return false;
+        string hash = Hash(File.ReadAllBytes(path));
+        if (relative.Equals("mods/Berry-Fizzy.igglemod", StringComparison.OrdinalIgnoreCase))
+            return hash == CherryV30Hash || hash == OldBerrySkinHash;
+        return relative.Equals("mods/Sugar-Grove.igglemod", StringComparison.OrdinalIgnoreCase) &&
+            hash == OldSugarGroveHash;
     }
     static byte[] Read(ZipArchive zip, string name) {
         var entry = zip.GetEntry(name);
@@ -108,10 +118,9 @@ internal static class Installer {
             foreach (var file in files) {
                 string relative = file.Key;
                 string current = Path.Combine(target, relative);
-                bool upgradeBerry = relative.Equals("mods/Berry-Fizzy.igglemod", StringComparison.OrdinalIgnoreCase)
-                    && File.Exists(current) && Hash(File.ReadAllBytes(current)) == OldBerrySkinHash;
-                if (!upgradeBerry && (relative.Equals("ddraw.ini", StringComparison.OrdinalIgnoreCase) ||
-                     relative.StartsWith("mods/", StringComparison.OrdinalIgnoreCase)) && File.Exists(current))
+                bool isMod = relative.StartsWith("mods/", StringComparison.OrdinalIgnoreCase);
+                if (File.Exists(current) && (relative.Equals("ddraw.ini", StringComparison.OrdinalIgnoreCase) ||
+                     (isMod && !IsOldBundledMod(relative, current))))
                     continue;
                 string previous = Path.Combine(transaction, relative);
                 Directory.CreateDirectory(Path.GetDirectoryName(previous));

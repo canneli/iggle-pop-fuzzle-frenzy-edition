@@ -24,7 +24,7 @@ static BOOL in_pause_menu;
 static void *custom_state, *custom_menu_state;
 static BYTE *custom_game;
 static BOOL custom_completed;
-static char custom_path[MAX_PATH];
+static char custom_path[MAX_PATH], custom_temporary[MAX_PATH];
 static const char custom_level_resource[] = "res/igglemods/custom-stage.xml";
 static BOOL custom_running, custom_ready, custom_exit_pending;
 static BOOL loading_custom_objects;
@@ -1358,6 +1358,10 @@ static void __attribute__((thiscall)) custom_enter_hook(void *state)
         RemoveVectoredExceptionHandler(exception_probe);
 #endif
         ((PhaseFunction)(game_image + 0x4f890))(&path);
+        if (custom_temporary[0]) {
+            DeleteFileA(custom_temporary);
+            custom_temporary[0] = 0;
+        }
         custom_trace(loaded ? "custom XML loaded" : "custom XML rejected");
         if (!loaded) { finish_custom(game); return; }
     }
@@ -2017,11 +2021,14 @@ BOOL iggle_custom_launch(void *menu)
     if (!menu || menu != custom_menu_state || !custom_ready || !iggle_custom_get_path(custom_path)) return FALSE;
     BYTE *game = *(BYTE **)((BYTE *)menu + 0x0c);
     if (!game) return FALSE;
-    EditorBoard collision_board;
-    if (!iggle_level_collision_board(custom_path,&collision_board)) return FALSE;
+    if (!iggle_level_prepare(custom_path, custom_temporary)) return FALSE;
     typedef void *(__cdecl *GameAlloc)(size_t);
     void *memory = ((GameAlloc)(game_image + 0xc0706))(0x1c);
-    if (!memory) return FALSE;
+    if (!memory) {
+        if (custom_temporary[0]) DeleteFileA(custom_temporary);
+        custom_temporary[0] = 0;
+        return FALSE;
+    }
     memset(memory, 0, 0x1c);
     custom_trace("custom level selected");
     custom_menu_state = NULL;

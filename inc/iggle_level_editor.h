@@ -29,5 +29,5 @@ void iggle_editor_board(EditorBoard *board);
 BOOL iggle_editor_dirty(void);
 BOOL iggle_editor_set_world(int world);
 const char *iggle_level_theme(const char *path);
-BOOL iggle_level_collision_board(const char *path,EditorBoard *result);
+BOOL iggle_level_prepare(char path[MAX_PATH], char temporary[MAX_PATH]);
 #endif

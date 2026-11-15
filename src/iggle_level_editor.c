@@ -205,38 +205,74 @@ static BOOL load_document(IXMLDOMDocument2 *doc,const wchar_t *path)
     return loaded == VARIANT_TRUE;
 }
 
-BOOL iggle_level_collision_board(const char *path,EditorBoard *result)
+static BOOL remove_node(IXMLDOMNode *node);
+static BOOL write_level_document(IXMLDOMDocument2 *doc, const wchar_t *path);
+
+BOOL iggle_level_prepare(char path[MAX_PATH], char temporary[MAX_PATH])
 {
     wchar_t filename[MAX_PATH];
-    if(!result || !MultiByteToWideChar(CP_ACP,0,path,-1,filename,ARRAYSIZE(filename)))return FALSE;
-    HRESULT initialized=CoInitializeEx(NULL,COINIT_APARTMENTTHREADED);
-    if(FAILED(initialized) && initialized!=RPC_E_CHANGED_MODE)return FALSE;
-    IXMLDOMDocument2 *doc=create_document();BOOL valid=FALSE;
-    memset(result,0,sizeof *result);
-    if(doc && load_document(doc,filename)) {
-        IXMLDOMNode *maze=NULL;BSTR query=SysAllocString(L"/level/maze");
-        IXMLDOMDocument2_selectSingleNode(doc,query,&maze);SysFreeString(query);
-        if(maze) {valid=coordinates(maze,L"@gridSize",&result->columns,&result->rows);maze->lpVtbl->Release(maze);}
-        valid=valid && result->columns>0 && result->rows>0 && result->columns<=EDIT_GRID_MAX && result->rows<=EDIT_GRID_MAX;
-        if(valid) {
-            IXMLDOMNodeList *nodes=NULL;query=SysAllocString(L"/level/maze/edge");
-            IXMLDOMDocument2_selectNodes(doc,query,&nodes);SysFreeString(query);
-            if(nodes) {
-                IXMLDOMNode *node=NULL;
-                while(nodes->lpVtbl->nextNode(nodes,&node)==S_OK && node) {
-                    int x,y;BSTR direction=read_attribute(node,L"@dir");
-                    if(direction && coordinates(node,L"@edgeIndex",&x,&y) && x>=0 && y>=0 && x<=result->columns && y<=result->rows) {
-                        if(!_wcsicmp(direction,L"h"))result->tiles[y][x]|=EDIT_HAS_WALL_H;
-                        if(!_wcsicmp(direction,L"v"))result->tiles[y][x]|=EDIT_HAS_WALL_V;
-                    }
-                    SysFreeString(direction);node->lpVtbl->Release(node);
+    if (!MultiByteToWideChar(CP_ACP, 0, path, -1, filename, ARRAYSIZE(filename))) return FALSE;
+    HRESULT initialized = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    if (FAILED(initialized) && initialized != RPC_E_CHANGED_MODE) return FALSE;
+
+    IXMLDOMDocument2 *doc = create_document();
+    BOOL valid = FALSE, filtered = FALSE;
+    if (doc && load_document(doc, filename)) {
+        IXMLDOMNode *maze = NULL;
+        BSTR query = SysAllocString(L"/level/maze");
+        IXMLDOMDocument2_selectSingleNode(doc, query, &maze);
+        SysFreeString(query);
+        int columns, rows;
+        if (maze) {
+            valid = coordinates(maze, L"@gridSize", &columns, &rows) &&
+                columns > 0 && rows > 0 && columns <= EDIT_GRID_MAX && rows <= EDIT_GRID_MAX;
+            maze->lpVtbl->Release(maze);
+        }
+
+        if (valid) {
+            IXMLDOMNodeList *edges = NULL;
+            query = SysAllocString(L"/level/maze/edge");
+            IXMLDOMDocument2_selectNodes(doc, query, &edges);
+            SysFreeString(query);
+            // The retail loader stores both edge sets in arrays sized to the grid.
+            // Walk the snapshot backwards as the outer edges are removed.
+            long count = 0;
+            if (edges) edges->lpVtbl->get_length(edges, &count);
+            for (long i = count; i > 0 && valid; --i) {
+                IXMLDOMNode *edge = NULL;
+                if (edges->lpVtbl->get_item(edges, i - 1, &edge) != S_OK || !edge) {
+                    valid = FALSE;
+                    break;
                 }
-                nodes->lpVtbl->Release(nodes);
+                int x, y;
+                if (!coordinates(edge, L"@edgeIndex", &x, &y) ||
+                    x < 0 || y < 0 || x >= columns || y >= rows) {
+                    valid = remove_node(edge);
+                    filtered = TRUE;
+                }
+                edge->lpVtbl->Release(edge);
             }
+            if (edges) edges->lpVtbl->Release(edges);
         }
     }
-    if(doc)IXMLDOMDocument2_Release(doc);
-    if(SUCCEEDED(initialized))CoUninitialize();
+
+    if (valid && filtered) {
+        wchar_t folder[MAX_PATH], staged[MAX_PATH];
+        DWORD length = GetTempPathW(ARRAYSIZE(folder), folder);
+        valid = length && length < ARRAYSIZE(folder) && GetTempFileNameW(folder, L"igl", 0, staged);
+        if (valid) {
+            BOOL substituted = FALSE;
+            UINT code_page = GetACP();
+            valid = WideCharToMultiByte(code_page, 0, staged, -1, temporary, MAX_PATH, NULL,
+                    code_page == CP_UTF8 ? NULL : &substituted) > 0 &&
+                !substituted && write_level_document(doc, staged);
+            if (valid) strcpy(path, temporary);
+            else DeleteFileW(staged);
+        }
+    }
+    if (!valid) temporary[0] = 0;
+    if (doc) IXMLDOMDocument2_Release(doc);
+    if (SUCCEEDED(initialized)) CoUninitialize();
     return valid;
 }
 
@@ -329,6 +365,31 @@ static void resolve_rainbow_homes(void)
     cages->lpVtbl->Release(cages);
 }
 
+static BOOL write_level_document(IXMLDOMDocument2 *doc, const wchar_t *path)
+{
+    // Write root-only UTF-8, matching the game's XML reader and standalone editor.
+    IXMLDOMElement *root = NULL;
+    BSTR xml = NULL;
+    if (SUCCEEDED(IXMLDOMDocument2_get_documentElement(doc, &root)) && root) {
+        root->lpVtbl->get_xml(root, &xml);
+        root->lpVtbl->Release(root);
+    }
+    int size = xml ? WideCharToMultiByte(CP_UTF8, 0, xml, -1, NULL, 0, NULL, NULL) : 0;
+    char *bytes = size > 1 ? HeapAlloc(GetProcessHeap(), 0, size) : NULL;
+    BOOL saved = FALSE;
+    if (bytes && WideCharToMultiByte(CP_UTF8, 0, xml, -1, bytes, size, NULL, NULL)) {
+        HANDLE file = CreateFileW(path, GENERIC_WRITE, 0, NULL, TRUNCATE_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (file != INVALID_HANDLE_VALUE) {
+            DWORD written = 0;
+            saved = WriteFile(file, bytes, size-1, &written, NULL) && written == (DWORD)(size-1);
+            CloseHandle(file);
+        }
+    }
+    if (bytes) HeapFree(GetProcessHeap(), 0, bytes);
+    SysFreeString(xml);
+    return saved;
+}
+
 BOOL iggle_editor_save(const wchar_t *path)
 {
     if (!document) return FALSE;
@@ -340,26 +401,7 @@ BOOL iggle_editor_save(const wchar_t *path)
     wmemcpy(directory, path, separator-path);
     directory[separator-path] = 0;
     if (!GetTempFileNameW(directory, L"igg", 0, temporary)) return FALSE;
-    // Write root-only UTF-8, matching the game's XML reader and standalone editor.
-    IXMLDOMElement *root = NULL;
-    BSTR xml = NULL;
-    if (SUCCEEDED(IXMLDOMDocument2_get_documentElement(document, &root)) && root) {
-        root->lpVtbl->get_xml(root, &xml);
-        root->lpVtbl->Release(root);
-    }
-    int size = xml ? WideCharToMultiByte(CP_UTF8, 0, xml, -1, NULL, 0, NULL, NULL) : 0;
-    char *bytes = size > 1 ? HeapAlloc(GetProcessHeap(), 0, size) : NULL;
-    BOOL saved = FALSE;
-    if (bytes && WideCharToMultiByte(CP_UTF8, 0, xml, -1, bytes, size, NULL, NULL)) {
-        HANDLE file = CreateFileW(temporary, GENERIC_WRITE, 0, NULL, TRUNCATE_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (file != INVALID_HANDLE_VALUE) {
-            DWORD written = 0;
-            saved = WriteFile(file, bytes, size-1, &written, NULL) && written == (DWORD)(size-1);
-            CloseHandle(file);
-        }
-    }
-    if (bytes) HeapFree(GetProcessHeap(), 0, bytes);
-    SysFreeString(xml);
+    BOOL saved = write_level_document(document, temporary);
     if (saved) saved = MoveFileExW(temporary, path, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
     if (!saved) DeleteFileW(temporary);
     if (saved) dirty = FALSE;
@@ -427,6 +469,8 @@ BOOL iggle_editor_paint(int x, int y, int side, int tool, int color, int variant
         tool < 0 || tool >= EDIT_TOOL_COUNT || color < 0 || color > EDIT_RAINBOW || (color==EDIT_RAINBOW && tool!=EDIT_CAGE)) return FALSE;
     if ((tool==EDIT_ZOOG && (variant<0 || variant>=EDIT_ZOOG_COUNT)) ||
         (tool==EDIT_POWER && (variant<0 || variant>=EDIT_POWER_COUNT))) return FALSE;
+    if (tool == EDIT_WALL && ((side == 3 && x + 1 == board.columns) ||
+                             (side == 2 && y + 1 == board.rows))) return FALSE;
     wchar_t cell[24], edge[24], query[170];
     swprintf(cell, ARRAYSIZE(cell), L"%d,%d", x, y);
     swprintf(edge, ARRAYSIZE(edge), L"%d,%d", x + (side == 3), y + (side == 2));

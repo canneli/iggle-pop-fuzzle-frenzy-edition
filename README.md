@@ -13,7 +13,7 @@
 | Languages | English, Brazilian Portuguese and Spanish, selectable in-game. The localization covers dialogue, stage names, notices, loading text and interface artwork. |
 | Controls and audio | WASD, arrow keys and compatible Windows controllers. Controller navigation, boost and pause, plus separate volume and mute controls for sound effects and music. |
 | Custom stages | In-game stage library and editor with themes, walls, floor tiles, decorations, color-coded homes and cages, enemies and power-ups. Playtest, save, save as and delete stages from inside the game. |
-| Mods | Load custom worlds and Fizzy skins from the in-game Mods menu. Sugar Grove and Cherry Fizzy are included. |
+| Mods | Load custom worlds and Fizzy skins from the in-game Mods menu. Sugar Grove and Strawberry Lollipop are included. |
 | Restored content | Rainbow Iggles, a time-slow pickup, an orange Blobby with animated eyes and its own trail, and a Dragon whose purple fire slows the hero. |
 | Fixes | Widescreen click targets, bonus and stage-clear messages, menu transitions, and campaign progress kept separate from custom stage playtests. |
 
@@ -49,9 +49,9 @@ The picker lets you choose which power-up to place on the board. The five stage 
 
 ![Sugar Grove in Iggle Pop Deluxe with strawberry-pink floors, icing walls and candy decorations](docs/images/iggle-pop-sugar-grove.png)
 
-Sugar Grove is a playable pink candy maze. The patch also includes Cherry Fizzy, a skin that uses Fizzy's existing moves and attributes.
+Sugar Grove is a playable pink candy maze. The patch also includes Strawberry Lollipop, a skin that uses Fizzy's existing moves and attributes.
 
-![Cherry Fizzy from four directions](docs/images/cherry-fizzy.png)
+![Strawberry Lollipop from four directions](docs/images/strawberry-lollipop-fizzy.png)
 
 Drop a `.igglemod` file into the `mods` folder in the game directory and reopen **Mods** on the main menu. Enable a world and select **Play world**. The active world also appears in the level editor's theme selector. You can enable one world and one Fizzy skin together. Restart the game after changing skins to reload the sprites. [Mod authoring guide](docs/MODS.md)
 
@@ -98,7 +98,7 @@ The localized Freeze badges keep the jagged silhouette and blue outline. The loa
 ## Installation
 
 1. Install **Iggle Pop! Deluxe on Steam** and close the game.
-2. Download `Iggle-Pop-Fuzzle-Frenzy-Edition-v30.exe` from the [latest release](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition/releases/latest).
+2. Download `Iggle-Pop-Fuzzle-Frenzy-Edition-v31.exe` from the [latest release](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition/releases/latest).
 3. Run the installer and select your Steam game folder.
 4. Launch from Steam. Open **Options** for video, audio and controls, **Language** to choose a translation, or **Custom Levels** to play and edit stages.
 
@@ -128,7 +128,7 @@ The installer checks the Steam game files and backs up the files it replaces in 
 | Idiomas | Inglês, português brasileiro e espanhol, com seleção pelo menu do jogo. Diálogos, nomes de fases, avisos, carregamento e artes de interface adaptados. |
 | Controles e áudio | WASD, setas e controle compatível com Windows. Navegação nos menus, turbo, pausa e controles separados para volume e liga/desliga de efeitos e música. |
 | Fases personalizadas | Biblioteca e editor internos, com seleção de tema, paredes, pisos, decoração, casas e gaiolas por cor, inimigos e poderes. Dá para testar, salvar, salvar como e apagar uma fase pelo jogo. |
-| Mods | Carregue mundos personalizados e visuais do Fizzy pelo menu Mods. O Bosque de Açúcar e o Cherry Fizzy vêm no patch. |
+| Mods | Carregue mundos personalizados e visuais do Fizzy pelo menu Mods. O Bosque de Açúcar e o Strawberry Lollipop vêm no patch. |
 | Conteúdo restaurado | Rainbows, coleta de tempo lento, Blobby laranja com olhos animados e trilha própria, e Dragão com fogo roxo que desacelera o herói. |
 | Correções | Alinhamento de cliques em 16:9, avisos de bônus e conclusão, transições de volta ao menu e separação entre o progresso da campanha e o teste de fases próprias. |
 
@@ -164,7 +164,7 @@ A paleta permite escolher o poder antes de colocá-lo no chão. Os cinco temas r
 
 ![Bosque de Açúcar no Iggle Pop Deluxe com piso rosa de morango, paredes de glacê e confeitos](docs/images/iggle-pop-sugar-grove.png)
 
-O Bosque de Açúcar é um labirinto rosa jogável. O patch também inclui o Cherry Fizzy, um visual que usa os movimentos e atributos do Fizzy.
+O Bosque de Açúcar é um labirinto rosa jogável. O patch também inclui o Strawberry Lollipop, um visual que usa os movimentos e atributos do Fizzy.
 
 Coloque o arquivo `.igglemod` na pasta `mods` da instalação e reabra **Mods** no menu inicial. Ative o mundo e escolha **Jogar mundo**. O tema ativo também aparece no seletor do editor de fases. Dá para ativar um mundo e um visual ao mesmo tempo. Reinicie o jogo depois de trocar de visual para recarregar os sprites. [Guia para criar mods](docs/MODS.md#português-brasil)
 
@@ -211,7 +211,7 @@ O selo de gelo mantém a silhueta irregular e o contorno azul. O texto da tela d
 ### Instalação
 
 1. Instale o **Iggle Pop! Deluxe da Steam** e feche o jogo.
-2. Baixe `Iggle-Pop-Fuzzle-Frenzy-Edition-v30.exe` na [release](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition/releases/latest).
+2. Baixe `Iggle-Pop-Fuzzle-Frenzy-Edition-v31.exe` na [release](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition/releases/latest).
 3. Abra o instalador e selecione a pasta do jogo.
 4. Inicie pela Steam. Use **Opções** para vídeo, áudio e controles, **Idioma** para tradução e **Fases personalizadas** para jogar ou editar mapas.
 

@@ -1,6 +1,6 @@
 # Creating Iggle Pop mods
 
-Install v30 or later. Place `.igglemod` files in the `mods` folder inside the Steam game directory. Open **Mods** on the main menu to refresh the list. One world and one Fizzy skin can be active together. Restart the game after switching skins to refresh loaded sprites.
+Install v31 or later. Place `.igglemod` files in the `mods` folder inside the Steam game directory. Open **Mods** on the main menu to refresh the list. One world and one Fizzy skin can be active together. Restart the game after switching skins to refresh loaded sprites.
 
 ## Make a package
 
@@ -42,3 +42,8 @@ O empacotador atualiza editorTheme ao trocar o ID. Para editar a fase
 de exemplo no jogo, copie o stage.xml extraído para CustomLevels com
 um nome próprio, ative o mundo e abra a cópia pelo editor. Os pacotes de herói usam as quatro direções do
 Fizzy e mantêm seus atributos e animações de jogo.
+
+
+In v31, a complete Fizzy costume supplies matching JPG and 16-bit grayscale PNG files for all 11 poses. Each pose is 35 × 35 pixels. North, east and west use indices 0–2 and south uses 0–1. World mods can supply two 47 × 47 JPGs, `floortile0.jpg` and `floortile1.jpg`, for floor cells drawn in the editor.
+
+No v31, uma fantasia completa do Fizzy usa JPG e PNG cinza de 16 bits para cada uma das 11 poses, todas com 35 × 35 pixels. Norte, leste e oeste usam os índices 0–2 e sul usa 0–1. Mundos podem incluir dois JPGs de 47 × 47 pixels, `floortile0.jpg` e `floortile1.jpg`, para os pisos colocados no editor.
