@@ -103,7 +103,7 @@ function repack(inputFile, replacementsFolder, outputFile) {
   const added = [];
   for (const filename of fs.readdirSync(replacementsFolder, {recursive:true}).sort()) {
     const name = filename.split(path.sep).join('/');
-    if (!(name.startsWith('res/monsters/hd/') || name.startsWith('res/menuassets/hd/') || name.startsWith('res/sounds/hd/')) || entries.has(name)) continue;
+    if (!(name.startsWith('res/monsters/hd/') || name.startsWith('res/menuassets/hd/') || name.startsWith('res/sounds/hd/') || name === 'res/themes/ship/widesky.jpg') || entries.has(name)) continue;
     const file = path.join(replacementsFolder, filename);
     if (!fs.statSync(file).isFile()) continue;
     const data = fs.readFileSync(file);
@@ -132,16 +132,11 @@ function repack(inputFile, replacementsFolder, outputFile) {
 }
 
 
-const [original, resources, outputDirectory] = process.argv.slice(2);
-if (!original || !resources || !outputDirectory) {
-  console.error('Usage: node pack-verified.cjs <original.saf> <language-resource-directory> <output-directory>');
-  process.exit(2);
-}
-fs.mkdirSync(outputDirectory, { recursive: true });
+const original=String.raw`C:\Program Files (x86)\Steam\steamapps\common\Iggle Pop Deluxe\IgglePop-HD-original\IgglePop.saf`;
 const source=fs.readFileSync(original), base=source.readUInt32LE(8);
 for(const lang of ['en','pt-BR','es']){
- const output=path.join(outputDirectory,`IgglePop-lang-${lang}.saf`);
- console.log(lang,repack(original,path.join(resources,lang),output));
+ const output=path.join(__dirname,`IgglePop-lang-${lang}.saf`);
+ console.log(lang,repack(original,path.join(__dirname,'language-resources',lang),output));
  const packed=fs.readFileSync(output);
- fs.writeFileSync(path.join(outputDirectory,lang),Buffer.concat([packed.subarray(8,12),packed.subarray(base)]));
+ fs.writeFileSync(path.join(__dirname,'installer-payload/deltas',lang),Buffer.concat([packed.subarray(8,12),packed.subarray(base)]));
 }

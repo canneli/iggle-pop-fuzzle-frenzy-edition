@@ -1811,6 +1811,40 @@ static BOOL replace_native_audio_toggle(BYTE *target, const BYTE *expected, Acti
     return memcmp(target, jump, sizeof jump) == 0;
 }
 
+static void __attribute__((thiscall)) attach_ship_clouds(void *maze, int layer, void *clouds)
+{
+    typedef void (__attribute__((thiscall)) *Attach)(void *, int, void *);
+    typedef void *(__attribute__((thiscall)) *FindImage)(void *, GameString *);
+    typedef void *(__cdecl *GameAlloc)(size_t);
+    Attach attach = (Attach)(game_image + 0x17c20);
+    void *theme = *(void **)((BYTE *)maze + 0x23c);
+    if (theme) {
+        GameString name = {.value.inline_text = "wideSky", .length = 7, .capacity = 15};
+        void *image = ((FindImage)(game_image + 0x24ae0))(theme, &name);
+        void *memory = image ? ((GameAlloc)(game_image + 0xc0706))(0x128) : NULL;
+        if (memory) {
+            void *sky = ((SpawnPickup)(game_image + 0x82e50))(memory, image, 1);
+            typedef void (__attribute__((thiscall)) *Position)(void *, float, float);
+            void **methods = *(void ***)sky;
+            ((Position)methods[0x18 / sizeof(void *)])(sky, 374.f, 243.f);
+            // Layer zero is behind the existing moving clouds and the deck.
+            attach(maze, 0, sky);
+            custom_trace("ship sky attached behind clouds");
+        }
+    }
+    attach(maze, layer, clouds);
+}
+
+static void install_ship_background(BYTE *base)
+{
+    const BYTE attach_underfx[] = {0xe8, 0x6a, 0x61, 0xfe, 0xff};
+    BYTE replacement[5] = {0xe8};
+    BYTE *callsite = base + 0x31ab1;
+    int32_t relative = (BYTE *)attach_ship_clouds - (callsite + sizeof replacement);
+    memcpy(replacement + 1, &relative, sizeof relative);
+    patch_game_bytes(callsite, attach_underfx, replacement, sizeof replacement);
+}
+
 static void install_audio_and_save_guards(BYTE *base)
 {
     const BYTE save_progress[] = {0x6a,0xff,0x68,0xe3,0xd3,0x4f,0};
@@ -1964,6 +1998,7 @@ void iggle_install_game_hook(void)
         (ActionFunction)resource_exists_hook,(ActionFunction *)&original_resource_exists);
     if (raw_ok && archive_ok && exists_ok) iggle_mods_startup();
     custom_ready = init_ok && enter_ok && action_ok && stream_ok;
+    if (*(const DWORD *)(base + 0x468b) == 864) install_ship_background(base);
     const BYTE retro_prefix[] = {0x6a,0xff,0x68,0xbb,0x19,0x50,0x00};
     const BYTE bonus_prefix[] = {0x6a,0xff,0x68,0xff,0x0d,0x50,0x00};
     const BYTE update_prefix[] = {0x56,0x8b,0xf1,0x8a,0x86,0x4d,0x01,0x00,0x00};

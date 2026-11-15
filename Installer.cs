@@ -16,6 +16,7 @@ internal static class Installer {
     const string Backup = "IgglePop-HD-original";
     const string Steam = @"C:\Program Files (x86)\Steam\steamapps\common\Iggle Pop Deluxe";
     const string OldSugarGroveHash = "0eb71343318e238a4a4cc6575c2cbb7fc20d625478030c75b6ca800713f25ed2";
+    const string LollipopV31Hash = "cb99f59c4f9ded89a894118905d1360ea05833869973edb521161cd01c1dc340";
     const string CherryV30Hash = "e1355a0f3ddc54534e2e9238d6d9bb5c2633fdba67ddd8d46cb5ff24f8ee822b";
     const string OldBerrySkinHash = "9e952b3aa5d62514a26356a23de702a72f38580f55c435004663f0d7626a6a09";
 
@@ -47,7 +48,7 @@ internal static class Installer {
         if (!File.Exists(path)) return false;
         string hash = Hash(File.ReadAllBytes(path));
         if (relative.Equals("mods/Berry-Fizzy.igglemod", StringComparison.OrdinalIgnoreCase))
-            return hash == CherryV30Hash || hash == OldBerrySkinHash;
+            return hash == LollipopV31Hash || hash == CherryV30Hash || hash == OldBerrySkinHash;
         return relative.Equals("mods/Sugar-Grove.igglemod", StringComparison.OrdinalIgnoreCase) &&
             hash == OldSugarGroveHash;
     }
