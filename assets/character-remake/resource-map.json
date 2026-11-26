@@ -1,0 +1,1682 @@
+[
+  {
+    "target": "res/monsters/armorzoog/armore.jpg",
+    "mask": "res/monsters/armorzoog/_armore.png",
+    "native_size": [
+      34,
+      37
+    ]
+  },
+  {
+    "target": "res/monsters/armorzoog/armorn.jpg",
+    "mask": "res/monsters/armorzoog/_armorn.png",
+    "native_size": [
+      34,
+      37
+    ]
+  },
+  {
+    "target": "res/monsters/armorzoog/armors.jpg",
+    "mask": "res/monsters/armorzoog/_armors.png",
+    "native_size": [
+      34,
+      37
+    ]
+  },
+  {
+    "target": "res/monsters/armorzoog/armorw.jpg",
+    "mask": "res/monsters/armorzoog/_armorw.png",
+    "native_size": [
+      34,
+      37
+    ]
+  },
+  {
+    "target": "res/monsters/blobbyzoog/eyeseast.jpg",
+    "mask": "res/monsters/blobbyzoog/_eyeseast.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/blobbyzoog/eyesfwd.jpg",
+    "mask": "res/monsters/blobbyzoog/_eyesfwd.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/blobbyzoog/eyesnorth.jpg",
+    "mask": "res/monsters/blobbyzoog/_eyesnorth.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/blobbyzoog/eyessouth.jpg",
+    "mask": "res/monsters/blobbyzoog/_eyessouth.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/blobbyzoog/eyeswest.jpg",
+    "mask": "res/monsters/blobbyzoog/_eyeswest.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/blobbyzoog/idlebase.jpg",
+    "mask": "res/monsters/blobbyzoog/_idlebase.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/bombshooter/bombshooter0.jpg",
+    "mask": "res/monsters/bombshooter/_bombshooter0.png",
+    "native_size": [
+      42,
+      37
+    ]
+  },
+  {
+    "target": "res/monsters/bombshooter/bombshooter1.jpg",
+    "mask": "res/monsters/bombshooter/_bombshooter1.png",
+    "native_size": [
+      42,
+      37
+    ]
+  },
+  {
+    "target": "res/monsters/bombshooter/bombshooter2.jpg",
+    "mask": "res/monsters/bombshooter/_bombshooter2.png",
+    "native_size": [
+      42,
+      37
+    ]
+  },
+  {
+    "target": "res/monsters/bombshooter/bombshooter3.jpg",
+    "mask": "res/monsters/bombshooter/_bombshooter3.png",
+    "native_size": [
+      42,
+      37
+    ]
+  },
+  {
+    "target": "res/monsters/cloakzoog/cloake.jpg",
+    "mask": "res/monsters/cloakzoog/_cloake.png",
+    "native_size": [
+      34,
+      38
+    ]
+  },
+  {
+    "target": "res/monsters/cloakzoog/cloakn.jpg",
+    "mask": "res/monsters/cloakzoog/_cloakn.png",
+    "native_size": [
+      34,
+      38
+    ]
+  },
+  {
+    "target": "res/monsters/cloakzoog/cloaks.jpg",
+    "mask": "res/monsters/cloakzoog/_cloaks.png",
+    "native_size": [
+      34,
+      38
+    ]
+  },
+  {
+    "target": "res/monsters/cloakzoog/cloakw.jpg",
+    "mask": "res/monsters/cloakzoog/_cloakw.png",
+    "native_size": [
+      34,
+      38
+    ]
+  },
+  {
+    "target": "res/monsters/editor/basezoogeditor.jpg",
+    "mask": "res/monsters/editor/_basezoogeditor.png",
+    "native_size": [
+      55,
+      55
+    ]
+  },
+  {
+    "target": "res/monsters/editor/firezoogeditor.jpg",
+    "mask": "res/monsters/editor/_firezoogeditor.png",
+    "native_size": [
+      55,
+      55
+    ]
+  },
+  {
+    "target": "res/monsters/firezoog/hornse.jpg",
+    "mask": "res/monsters/firezoog/_hornse.png",
+    "native_size": [
+      34,
+      25
+    ]
+  },
+  {
+    "target": "res/monsters/firezoog/hornsn.jpg",
+    "mask": "res/monsters/firezoog/_hornsn.png",
+    "native_size": [
+      34,
+      25
+    ]
+  },
+  {
+    "target": "res/monsters/firezoog/hornss.jpg",
+    "mask": "res/monsters/firezoog/_hornss.png",
+    "native_size": [
+      34,
+      25
+    ]
+  },
+  {
+    "target": "res/monsters/firezoog/hornsw.jpg",
+    "mask": "res/monsters/firezoog/_hornsw.png",
+    "native_size": [
+      34,
+      25
+    ]
+  },
+  {
+    "target": "res/monsters/firezoog/shadowpufff0.jpg",
+    "mask": "res/monsters/firezoog/_shadowpufff0.png",
+    "native_size": [
+      40,
+      42
+    ]
+  },
+  {
+    "target": "res/monsters/firezoog/shadowpufff1.jpg",
+    "mask": "res/monsters/firezoog/_shadowpufff1.png",
+    "native_size": [
+      40,
+      42
+    ]
+  },
+  {
+    "target": "res/monsters/firezoog/shadowpufff2.jpg",
+    "mask": "res/monsters/firezoog/_shadowpufff2.png",
+    "native_size": [
+      40,
+      42
+    ]
+  },
+  {
+    "target": "res/monsters/firezoog/shadowpufff3.jpg",
+    "mask": "res/monsters/firezoog/_shadowpufff3.png",
+    "native_size": [
+      40,
+      42
+    ]
+  },
+  {
+    "target": "res/monsters/genericzoog/eyeseast.jpg",
+    "mask": "res/monsters/genericzoog/_eyeseast.png",
+    "native_size": [
+      30,
+      19
+    ]
+  },
+  {
+    "target": "res/monsters/genericzoog/eyessouth.jpg",
+    "mask": "res/monsters/genericzoog/_eyessouth.png",
+    "native_size": [
+      30,
+      19
+    ]
+  },
+  {
+    "target": "res/monsters/genericzoog/eyeswest.jpg",
+    "mask": "res/monsters/genericzoog/_eyeswest.png",
+    "native_size": [
+      30,
+      19
+    ]
+  },
+  {
+    "target": "res/monsters/genericzoog/idlebase.jpg",
+    "mask": "res/monsters/genericzoog/_idlebase.png",
+    "native_size": [
+      47,
+      35
+    ]
+  },
+  {
+    "target": "res/monsters/genericzoog/scaredeyeseast.jpg",
+    "mask": "res/monsters/genericzoog/_scaredeyeseast.png",
+    "native_size": [
+      27,
+      20
+    ]
+  },
+  {
+    "target": "res/monsters/genericzoog/scaredeyesfwd.jpg",
+    "mask": "res/monsters/genericzoog/_scaredeyesfwd.png",
+    "native_size": [
+      27,
+      20
+    ]
+  },
+  {
+    "target": "res/monsters/genericzoog/scaredeyesnorth.jpg",
+    "mask": "res/monsters/genericzoog/_scaredeyesnorth.png",
+    "native_size": [
+      27,
+      20
+    ]
+  },
+  {
+    "target": "res/monsters/genericzoog/scaredeyessouth.jpg",
+    "mask": "res/monsters/genericzoog/_scaredeyessouth.png",
+    "native_size": [
+      27,
+      20
+    ]
+  },
+  {
+    "target": "res/monsters/genericzoog/scaredeyeswest.jpg",
+    "mask": "res/monsters/genericzoog/_scaredeyeswest.png",
+    "native_size": [
+      27,
+      20
+    ]
+  },
+  {
+    "target": "res/monsters/genericzoog/shadowpuff0.jpg",
+    "mask": "res/monsters/genericzoog/_shadowpuff0.png",
+    "native_size": [
+      40,
+      42
+    ]
+  },
+  {
+    "target": "res/monsters/genericzoog/shadowpuff1.jpg",
+    "mask": "res/monsters/genericzoog/_shadowpuff1.png",
+    "native_size": [
+      40,
+      42
+    ]
+  },
+  {
+    "target": "res/monsters/genericzoog/shadowpuff2.jpg",
+    "mask": "res/monsters/genericzoog/_shadowpuff2.png",
+    "native_size": [
+      40,
+      42
+    ]
+  },
+  {
+    "target": "res/monsters/genericzoog/shadowpuff3.jpg",
+    "mask": "res/monsters/genericzoog/_shadowpuff3.png",
+    "native_size": [
+      40,
+      42
+    ]
+  },
+  {
+    "target": "res/monsters/genericzoog/zappedarc0.jpg",
+    "mask": "res/monsters/genericzoog/_zappedarc0.png",
+    "native_size": [
+      50,
+      47
+    ]
+  },
+  {
+    "target": "res/monsters/genericzoog/zappedarc1.jpg",
+    "mask": "res/monsters/genericzoog/_zappedarc1.png",
+    "native_size": [
+      50,
+      47
+    ]
+  },
+  {
+    "target": "res/monsters/gmzoog/gmzarmleast.jpg",
+    "mask": "res/monsters/gmzoog/_gmzarmleast.png",
+    "native_size": [
+      19,
+      29
+    ]
+  },
+  {
+    "target": "res/monsters/gmzoog/gmzarmlnorth.jpg",
+    "mask": "res/monsters/gmzoog/_gmzarmlnorth.png",
+    "native_size": [
+      17,
+      14
+    ]
+  },
+  {
+    "target": "res/monsters/gmzoog/gmzarmlsouth.jpg",
+    "mask": "res/monsters/gmzoog/_gmzarmlsouth.png",
+    "native_size": [
+      19,
+      28
+    ]
+  },
+  {
+    "target": "res/monsters/gmzoog/gmzarmlwest.jpg",
+    "mask": "res/monsters/gmzoog/_gmzarmlwest.png",
+    "native_size": [
+      22,
+      29
+    ]
+  },
+  {
+    "target": "res/monsters/gmzoog/gmzarmrnorth.jpg",
+    "mask": "res/monsters/gmzoog/_gmzarmrnorth.png",
+    "native_size": [
+      17,
+      14
+    ]
+  },
+  {
+    "target": "res/monsters/gmzoog/gmzarmrsouth.jpg",
+    "mask": "res/monsters/gmzoog/_gmzarmrsouth.png",
+    "native_size": [
+      19,
+      29
+    ]
+  },
+  {
+    "target": "res/monsters/gmzoog/gmzarmrwest.jpg",
+    "mask": "res/monsters/gmzoog/_gmzarmrwest.png",
+    "native_size": [
+      19,
+      29
+    ]
+  },
+  {
+    "target": "res/monsters/gmzoog/gmzbodeast.jpg",
+    "mask": "res/monsters/gmzoog/_gmzbodeast.png",
+    "native_size": [
+      59,
+      68
+    ]
+  },
+  {
+    "target": "res/monsters/gmzoog/gmzbodnorth.jpg",
+    "mask": "res/monsters/gmzoog/_gmzbodnorth.png",
+    "native_size": [
+      46,
+      66
+    ]
+  },
+  {
+    "target": "res/monsters/gmzoog/gmzbodsouth.jpg",
+    "mask": "res/monsters/gmzoog/_gmzbodsouth.png",
+    "native_size": [
+      46,
+      65
+    ]
+  },
+  {
+    "target": "res/monsters/gmzoog/gmzbodwest.jpg",
+    "mask": "res/monsters/gmzoog/_gmzbodwest.png",
+    "native_size": [
+      59,
+      68
+    ]
+  },
+  {
+    "target": "res/monsters/gmzoog/gmzheadeast.jpg",
+    "mask": "res/monsters/gmzoog/_gmzheadeast.png",
+    "native_size": [
+      30,
+      30
+    ]
+  },
+  {
+    "target": "res/monsters/gmzoog/gmzheadnorth.jpg",
+    "mask": "res/monsters/gmzoog/_gmzheadnorth.png",
+    "native_size": [
+      25,
+      28
+    ]
+  },
+  {
+    "target": "res/monsters/gmzoog/gmzheadwest.jpg",
+    "mask": "res/monsters/gmzoog/_gmzheadwest.png",
+    "native_size": [
+      30,
+      30
+    ]
+  },
+  {
+    "target": "res/monsters/guardzoog/guardeast.jpg",
+    "mask": "res/monsters/guardzoog/_guardeast.png",
+    "native_size": [
+      38,
+      38
+    ]
+  },
+  {
+    "target": "res/monsters/guardzoog/guardnorth.jpg",
+    "mask": "res/monsters/guardzoog/_guardnorth.png",
+    "native_size": [
+      38,
+      38
+    ]
+  },
+  {
+    "target": "res/monsters/guardzoog/guardsouth.jpg",
+    "mask": "res/monsters/guardzoog/_guardsouth.png",
+    "native_size": [
+      38,
+      38
+    ]
+  },
+  {
+    "target": "res/monsters/guardzoog/guardwest.jpg",
+    "mask": "res/monsters/guardzoog/_guardwest.png",
+    "native_size": [
+      38,
+      38
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbybody.jpg",
+    "mask": "res/monsters/hd/_blobbybody.png",
+    "native_size": [
+      75,
+      65
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbye0.jpg",
+    "mask": "res/monsters/hd/_blobbye0.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbye1.jpg",
+    "mask": "res/monsters/hd/_blobbye1.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbye2.jpg",
+    "mask": "res/monsters/hd/_blobbye2.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbye3.jpg",
+    "mask": "res/monsters/hd/_blobbye3.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbye4.jpg",
+    "mask": "res/monsters/hd/_blobbye4.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbye5.jpg",
+    "mask": "res/monsters/hd/_blobbye5.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbye6.jpg",
+    "mask": "res/monsters/hd/_blobbye6.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbye7.jpg",
+    "mask": "res/monsters/hd/_blobbye7.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbyn0.jpg",
+    "mask": "res/monsters/hd/_blobbyn0.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbyn1.jpg",
+    "mask": "res/monsters/hd/_blobbyn1.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbyn2.jpg",
+    "mask": "res/monsters/hd/_blobbyn2.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbyn3.jpg",
+    "mask": "res/monsters/hd/_blobbyn3.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbyn4.jpg",
+    "mask": "res/monsters/hd/_blobbyn4.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbyn5.jpg",
+    "mask": "res/monsters/hd/_blobbyn5.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbyn6.jpg",
+    "mask": "res/monsters/hd/_blobbyn6.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbyn7.jpg",
+    "mask": "res/monsters/hd/_blobbyn7.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbypuff0.jpg",
+    "mask": "res/monsters/hd/_blobbypuff0.png",
+    "native_size": [
+      24,
+      24
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbypuff1.jpg",
+    "mask": "res/monsters/hd/_blobbypuff1.png",
+    "native_size": [
+      24,
+      24
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbypuff2.jpg",
+    "mask": "res/monsters/hd/_blobbypuff2.png",
+    "native_size": [
+      24,
+      24
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbypuff3.jpg",
+    "mask": "res/monsters/hd/_blobbypuff3.png",
+    "native_size": [
+      24,
+      24
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbys0.jpg",
+    "mask": "res/monsters/hd/_blobbys0.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbys1.jpg",
+    "mask": "res/monsters/hd/_blobbys1.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbys2.jpg",
+    "mask": "res/monsters/hd/_blobbys2.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbys3.jpg",
+    "mask": "res/monsters/hd/_blobbys3.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbys4.jpg",
+    "mask": "res/monsters/hd/_blobbys4.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbys5.jpg",
+    "mask": "res/monsters/hd/_blobbys5.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbys6.jpg",
+    "mask": "res/monsters/hd/_blobbys6.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbys7.jpg",
+    "mask": "res/monsters/hd/_blobbys7.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbyw0.jpg",
+    "mask": "res/monsters/hd/_blobbyw0.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbyw1.jpg",
+    "mask": "res/monsters/hd/_blobbyw1.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbyw2.jpg",
+    "mask": "res/monsters/hd/_blobbyw2.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbyw3.jpg",
+    "mask": "res/monsters/hd/_blobbyw3.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbyw4.jpg",
+    "mask": "res/monsters/hd/_blobbyw4.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbyw5.jpg",
+    "mask": "res/monsters/hd/_blobbyw5.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbyw6.jpg",
+    "mask": "res/monsters/hd/_blobbyw6.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/blobbyw7.jpg",
+    "mask": "res/monsters/hd/_blobbyw7.png",
+    "native_size": [
+      45,
+      39
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon00.jpg",
+    "mask": "res/monsters/hd/_dragon00.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon01.jpg",
+    "mask": "res/monsters/hd/_dragon01.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon02.jpg",
+    "mask": "res/monsters/hd/_dragon02.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon03.jpg",
+    "mask": "res/monsters/hd/_dragon03.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon04.jpg",
+    "mask": "res/monsters/hd/_dragon04.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon05.jpg",
+    "mask": "res/monsters/hd/_dragon05.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon06.jpg",
+    "mask": "res/monsters/hd/_dragon06.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon07.jpg",
+    "mask": "res/monsters/hd/_dragon07.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon10.jpg",
+    "mask": "res/monsters/hd/_dragon10.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon11.jpg",
+    "mask": "res/monsters/hd/_dragon11.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon12.jpg",
+    "mask": "res/monsters/hd/_dragon12.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon13.jpg",
+    "mask": "res/monsters/hd/_dragon13.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon14.jpg",
+    "mask": "res/monsters/hd/_dragon14.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon15.jpg",
+    "mask": "res/monsters/hd/_dragon15.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon16.jpg",
+    "mask": "res/monsters/hd/_dragon16.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon17.jpg",
+    "mask": "res/monsters/hd/_dragon17.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon20.jpg",
+    "mask": "res/monsters/hd/_dragon20.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon21.jpg",
+    "mask": "res/monsters/hd/_dragon21.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon22.jpg",
+    "mask": "res/monsters/hd/_dragon22.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon23.jpg",
+    "mask": "res/monsters/hd/_dragon23.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon24.jpg",
+    "mask": "res/monsters/hd/_dragon24.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon25.jpg",
+    "mask": "res/monsters/hd/_dragon25.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon26.jpg",
+    "mask": "res/monsters/hd/_dragon26.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon27.jpg",
+    "mask": "res/monsters/hd/_dragon27.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon30.jpg",
+    "mask": "res/monsters/hd/_dragon30.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon31.jpg",
+    "mask": "res/monsters/hd/_dragon31.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon32.jpg",
+    "mask": "res/monsters/hd/_dragon32.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon33.jpg",
+    "mask": "res/monsters/hd/_dragon33.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon34.jpg",
+    "mask": "res/monsters/hd/_dragon34.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon35.jpg",
+    "mask": "res/monsters/hd/_dragon35.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon36.jpg",
+    "mask": "res/monsters/hd/_dragon36.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragon37.jpg",
+    "mask": "res/monsters/hd/_dragon37.png",
+    "native_size": [
+      94,
+      80
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragonfireball.jpg",
+    "mask": "res/monsters/hd/_dragonfireball.png",
+    "native_size": [
+      25,
+      25
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragonpuff0.jpg",
+    "mask": "res/monsters/hd/_dragonpuff0.png",
+    "native_size": [
+      40,
+      42
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragonpuff1.jpg",
+    "mask": "res/monsters/hd/_dragonpuff1.png",
+    "native_size": [
+      40,
+      42
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragonpuff2.jpg",
+    "mask": "res/monsters/hd/_dragonpuff2.png",
+    "native_size": [
+      40,
+      42
+    ]
+  },
+  {
+    "target": "res/monsters/hd/dragonpuff3.jpg",
+    "mask": "res/monsters/hd/_dragonpuff3.png",
+    "native_size": [
+      40,
+      42
+    ]
+  },
+  {
+    "target": "res/monsters/hd/rainbowe.jpg",
+    "mask": "res/monsters/hd/_rainbowe.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/monsters/hd/rainbown.jpg",
+    "mask": "res/monsters/hd/_rainbown.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/monsters/hd/rainbows.jpg",
+    "mask": "res/monsters/hd/_rainbows.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/monsters/hd/rainboww.jpg",
+    "mask": "res/monsters/hd/_rainboww.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/monsters/shooterzoog/shootereast.jpg",
+    "mask": "res/monsters/shooterzoog/_shootereast.png",
+    "native_size": [
+      34,
+      34
+    ]
+  },
+  {
+    "target": "res/monsters/shooterzoog/shooternorth.jpg",
+    "mask": "res/monsters/shooterzoog/_shooternorth.png",
+    "native_size": [
+      34,
+      34
+    ]
+  },
+  {
+    "target": "res/monsters/shooterzoog/shootersouth.jpg",
+    "mask": "res/monsters/shooterzoog/_shootersouth.png",
+    "native_size": [
+      34,
+      34
+    ]
+  },
+  {
+    "target": "res/monsters/shooterzoog/shooterwest.jpg",
+    "mask": "res/monsters/shooterzoog/_shooterwest.png",
+    "native_size": [
+      34,
+      34
+    ]
+  },
+  {
+    "target": "res/monsters/tunnelzoog/drillere0.jpg",
+    "mask": "res/monsters/tunnelzoog/_drillere0.png",
+    "native_size": [
+      34,
+      38
+    ]
+  },
+  {
+    "target": "res/monsters/tunnelzoog/drillere1.jpg",
+    "mask": "res/monsters/tunnelzoog/_drillere1.png",
+    "native_size": [
+      34,
+      38
+    ]
+  },
+  {
+    "target": "res/monsters/tunnelzoog/drillern0.jpg",
+    "mask": "res/monsters/tunnelzoog/_drillern0.png",
+    "native_size": [
+      34,
+      38
+    ]
+  },
+  {
+    "target": "res/monsters/tunnelzoog/drillern1.jpg",
+    "mask": "res/monsters/tunnelzoog/_drillern1.png",
+    "native_size": [
+      34,
+      38
+    ]
+  },
+  {
+    "target": "res/monsters/tunnelzoog/drillers0.jpg",
+    "mask": "res/monsters/tunnelzoog/_drillers0.png",
+    "native_size": [
+      34,
+      38
+    ]
+  },
+  {
+    "target": "res/monsters/tunnelzoog/drillers1.jpg",
+    "mask": "res/monsters/tunnelzoog/_drillers1.png",
+    "native_size": [
+      34,
+      38
+    ]
+  },
+  {
+    "target": "res/monsters/tunnelzoog/drillerw0.jpg",
+    "mask": "res/monsters/tunnelzoog/_drillerw0.png",
+    "native_size": [
+      34,
+      38
+    ]
+  },
+  {
+    "target": "res/monsters/tunnelzoog/drillerw1.jpg",
+    "mask": "res/monsters/tunnelzoog/_drillerw1.png",
+    "native_size": [
+      34,
+      38
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/bluee.jpg",
+    "mask": "res/themes/fuzzles/_bluee.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/bluen.jpg",
+    "mask": "res/themes/fuzzles/_bluen.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/blues.jpg",
+    "mask": "res/themes/fuzzles/_blues.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/bluew.jpg",
+    "mask": "res/themes/fuzzles/_bluew.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/bozzeast0.jpg",
+    "mask": "res/themes/fuzzles/_bozzeast0.png",
+    "native_size": [
+      34,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/bozznorth0.jpg",
+    "mask": "res/themes/fuzzles/_bozznorth0.png",
+    "native_size": [
+      34,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/bozzsouth0.jpg",
+    "mask": "res/themes/fuzzles/_bozzsouth0.png",
+    "native_size": [
+      34,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/bozzwest0.jpg",
+    "mask": "res/themes/fuzzles/_bozzwest0.png",
+    "native_size": [
+      34,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/dizzyeast0.jpg",
+    "mask": "res/themes/fuzzles/_dizzyeast0.png",
+    "native_size": [
+      37,
+      35
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/dizzynorth0.jpg",
+    "mask": "res/themes/fuzzles/_dizzynorth0.png",
+    "native_size": [
+      37,
+      35
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/dizzysouth0.jpg",
+    "mask": "res/themes/fuzzles/_dizzysouth0.png",
+    "native_size": [
+      37,
+      35
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/dizzywest0.jpg",
+    "mask": "res/themes/fuzzles/_dizzywest0.png",
+    "native_size": [
+      37,
+      35
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/docbase.jpg",
+    "mask": "res/themes/fuzzles/_docbase.png",
+    "native_size": [
+      40,
+      40
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/doceast0.jpg",
+    "mask": "res/themes/fuzzles/_doceast0.png",
+    "native_size": [
+      33,
+      42
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/docnorth0.jpg",
+    "mask": "res/themes/fuzzles/_docnorth0.png",
+    "native_size": [
+      33,
+      42
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/docsouth0.jpg",
+    "mask": "res/themes/fuzzles/_docsouth0.png",
+    "native_size": [
+      33,
+      42
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/docwest0.jpg",
+    "mask": "res/themes/fuzzles/_docwest0.png",
+    "native_size": [
+      33,
+      42
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/fizzyeast0.jpg",
+    "mask": "res/themes/fuzzles/_fizzyeast0.png",
+    "native_size": [
+      35,
+      35
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/fizzyeast1.jpg",
+    "mask": "res/themes/fuzzles/_fizzyeast1.png",
+    "native_size": [
+      35,
+      35
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/fizzyeast2.jpg",
+    "mask": "res/themes/fuzzles/_fizzyeast2.png",
+    "native_size": [
+      35,
+      35
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/fizzynorth0.jpg",
+    "mask": "res/themes/fuzzles/_fizzynorth0.png",
+    "native_size": [
+      35,
+      35
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/fizzynorth1.jpg",
+    "mask": "res/themes/fuzzles/_fizzynorth1.png",
+    "native_size": [
+      35,
+      35
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/fizzynorth2.jpg",
+    "mask": "res/themes/fuzzles/_fizzynorth2.png",
+    "native_size": [
+      35,
+      35
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/fizzysouth0.jpg",
+    "mask": "res/themes/fuzzles/_fizzysouth0.png",
+    "native_size": [
+      35,
+      35
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/fizzysouth1.jpg",
+    "mask": "res/themes/fuzzles/_fizzysouth1.png",
+    "native_size": [
+      35,
+      35
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/fizzywest0.jpg",
+    "mask": "res/themes/fuzzles/_fizzywest0.png",
+    "native_size": [
+      35,
+      35
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/fizzywest1.jpg",
+    "mask": "res/themes/fuzzles/_fizzywest1.png",
+    "native_size": [
+      35,
+      35
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/fizzywest2.jpg",
+    "mask": "res/themes/fuzzles/_fizzywest2.png",
+    "native_size": [
+      35,
+      35
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/fx/followbaseblue0.jpg",
+    "mask": "res/themes/fuzzles/fx/_followbaseblue0.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/fx/followbasegreen0.jpg",
+    "mask": "res/themes/fuzzles/fx/_followbasegreen0.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/fx/followbasepurple0.jpg",
+    "mask": "res/themes/fuzzles/fx/_followbasepurple0.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/fx/followbaseyellow0.jpg",
+    "mask": "res/themes/fuzzles/fx/_followbaseyellow0.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/greene.jpg",
+    "mask": "res/themes/fuzzles/_greene.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/greenn.jpg",
+    "mask": "res/themes/fuzzles/_greenn.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/greens.jpg",
+    "mask": "res/themes/fuzzles/_greens.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/greenw.jpg",
+    "mask": "res/themes/fuzzles/_greenw.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/hero1south0.jpg",
+    "mask": "res/themes/fuzzles/_hero1south0.png",
+    "native_size": [
+      39,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/purplee.jpg",
+    "mask": "res/themes/fuzzles/_purplee.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/purplen.jpg",
+    "mask": "res/themes/fuzzles/_purplen.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/purples.jpg",
+    "mask": "res/themes/fuzzles/_purples.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/purplew.jpg",
+    "mask": "res/themes/fuzzles/_purplew.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/rizzoeast0.jpg",
+    "mask": "res/themes/fuzzles/_rizzoeast0.png",
+    "native_size": [
+      33,
+      45
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/rizzonorth0.jpg",
+    "mask": "res/themes/fuzzles/_rizzonorth0.png",
+    "native_size": [
+      33,
+      45
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/rizzosouth0.jpg",
+    "mask": "res/themes/fuzzles/_rizzosouth0.png",
+    "native_size": [
+      33,
+      45
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/rizzowest0.jpg",
+    "mask": "res/themes/fuzzles/_rizzowest0.png",
+    "native_size": [
+      33,
+      45
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/trappedblue0.jpg",
+    "mask": "res/themes/fuzzles/_trappedblue0.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/trappedblue1.jpg",
+    "mask": "res/themes/fuzzles/_trappedblue1.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/trappedgreen0.jpg",
+    "mask": "res/themes/fuzzles/_trappedgreen0.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/trappedgreen1.jpg",
+    "mask": "res/themes/fuzzles/_trappedgreen1.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/trappedpurple0.jpg",
+    "mask": "res/themes/fuzzles/_trappedpurple0.png",
+    "native_size": [
+      44,
+      44
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/trappedpurple1.jpg",
+    "mask": "res/themes/fuzzles/_trappedpurple1.png",
+    "native_size": [
+      44,
+      44
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/trappedrainbow0.jpg",
+    "mask": "res/themes/fuzzles/_trappedrainbow0.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/trappedrainbow1.jpg",
+    "mask": "res/themes/fuzzles/_trappedrainbow1.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/trappedyellow0.jpg",
+    "mask": "res/themes/fuzzles/_trappedyellow0.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/trappedyellow1.jpg",
+    "mask": "res/themes/fuzzles/_trappedyellow1.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/yellowe.jpg",
+    "mask": "res/themes/fuzzles/_yellowe.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/yellown.jpg",
+    "mask": "res/themes/fuzzles/_yellown.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/yellows.jpg",
+    "mask": "res/themes/fuzzles/_yellows.png",
+    "native_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "target": "res/themes/fuzzles/yelloww.jpg",
+    "mask": "res/themes/fuzzles/_yelloww.png",
+    "native_size": [
+      36,
+      36
+    ]
+  }
+]

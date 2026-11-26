@@ -132,6 +132,8 @@ function repack(inputFile, replacementsFolder, outputFile) {
 }
 
 
+module.exports={safDigest,readArchive,repack};
+if(require.main === module){
 const original=String.raw`C:\Program Files (x86)\Steam\steamapps\common\Iggle Pop Deluxe\IgglePop-HD-original\IgglePop.saf`;
 const source=fs.readFileSync(original), base=source.readUInt32LE(8);
 for(const lang of ['en','pt-BR','es']){
@@ -139,4 +141,5 @@ for(const lang of ['en','pt-BR','es']){
  console.log(lang,repack(original,path.join(__dirname,'language-resources',lang),output));
  const packed=fs.readFileSync(output);
  fs.writeFileSync(path.join(__dirname,'installer-payload/deltas',lang),Buffer.concat([packed.subarray(8,12),packed.subarray(base)]));
+}
 }

@@ -1,0 +1,2 @@
+https://github.com/nothings/stb/blob/033efa1bcb750136ac98e997d53833b758e0089b/stb_vorbis.c
+Used under the MIT license included in stb_vorbis.c.

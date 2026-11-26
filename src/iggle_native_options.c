@@ -13,6 +13,7 @@
 #include "iggle_custom_levels.h"
 #include "iggle_level_editor.h"
 #include "iggle_mods.h"
+#include "iggle_voice.h"
 
 typedef void (__attribute__((thiscall)) *ActionFunction)(void *,void *);
 typedef void (__attribute__((thiscall)) *PhaseFunction)(void *);
@@ -28,6 +29,7 @@ static char custom_path[MAX_PATH], custom_temporary[MAX_PATH];
 static const char custom_level_resource[] = "res/igglemods/custom-stage.xml";
 static BOOL custom_running, custom_ready, custom_exit_pending;
 static BOOL loading_custom_objects;
+static BOOL voice_actor_probe(void *actor,IggleVoiceActor *state);
 static const char *custom_theme;
 static DWORD saved_level_index, saved_level_number;
 #ifdef IGGLE_CUSTOM_TEST
@@ -61,6 +63,9 @@ static void __attribute__((thiscall)) active_update_hook(void *phase, void *fram
     ((PhaseUpdate)original_active_update)(phase, frame);
     BYTE *world = phase;
     if (world[0x14d]) return; // The engine is still counting down.
+    if(in_pause_menu || custom_exit_pending || iggle_overlay_is_open())iggle_voice_stop();
+    if(!in_pause_menu && !custom_exit_pending && !iggle_overlay_is_open())
+        iggle_voice_tick(*(float *)((BYTE *)frame+8),voice_actor_probe);
 
     void *bonus_screen = *(void **)(world + 0x12c);
     if (bonus_screen && *(void **)bonus_screen == game_image + 0x116e20) {
@@ -134,6 +139,7 @@ static BYTE __attribute__((thiscall)) layout_hook(void *screen, GameString file)
         }
         if (in_pause_menu || strstr(name, "mainMenu.xml") || strstr(name, "gameEndRetro.xml") ||
             strstr(name, "levelEndNormal.xml") || strstr(name, "levelEndBonus.xml")) {
+            iggle_voice_stop();
             iggle_input_set_gameplay(FALSE);
         }
     }
@@ -239,6 +245,12 @@ static PhaseFunction original_fatal_hit, original_direct_fatal_hit;
 static ActionFunction original_world_fatal_hit;
 static void __attribute__((thiscall)) collect_native_jewel(void *world,int points,const float *position);
 static PhaseFunction original_fuzzle_cleanup;
+static PhaseFunction original_fuzzle_breakfree;
+static void __attribute__((thiscall)) voiced_fuzzle_breakfree(void *fuzzle)
+{
+    original_fuzzle_breakfree(fuzzle);
+    iggle_voice_lost(fuzzle);
+}
 static void remember_rainbow(void *fuzzle);
 static BOOL actor_position(void *actor,float *x,float *y);
 static void *dragon_images[4][8], *dragon_sprite_image;
@@ -272,6 +284,7 @@ static void reset_crystal_power(void)
 
 static void reset_restored_objects(void)
 {
+    iggle_voice_reset();
     iggle_end_slow_power();
     slow_count = 0;
     rainbow_count = restored_monster_count = 0;
@@ -387,12 +400,15 @@ static void __attribute__((thiscall)) attach_cage(void *fuzzle, void *cage)
         remember_rainbow(fuzzle);
     }
     original_attach_cage(fuzzle, cage);
+    iggle_voice_register(fuzzle);
     restored_art = previous;
 }
 
 static ActionFunction original_trapped_art;
 static void __attribute__((thiscall)) show_trapped_fuzzle(void *fuzzle, void *args)
 {
+    iggle_voice_register(fuzzle);
+    void *previous_voice=iggle_voice_build(fuzzle);
     int previous = restored_art;
     void *cage = *(void **)((BYTE *)fuzzle+0xa4);
     if (restored_index(rainbow_cages, rainbow_count, cage) >= 0) {
@@ -400,14 +416,17 @@ static void __attribute__((thiscall)) show_trapped_fuzzle(void *fuzzle, void *ar
         remember_rainbow(fuzzle);
     }
     original_trapped_art(fuzzle, args);
+    iggle_voice_build(previous_voice);
     restored_art = previous;
 }
 
 static void __attribute__((thiscall)) free_rainbow_fuzzle(void *fuzzle, void *args)
 {
+    void *previous_voice=iggle_voice_build(fuzzle);
     int previous = restored_art;
     if (restored_index(rainbow_fuzzles,rainbow_fuzzle_count,fuzzle)>=0) restored_art=ART_RAINBOW;
     original_freed_fuzzle(fuzzle,args);
+    iggle_voice_build(previous_voice);
     restored_art=previous;
 }
 
@@ -527,6 +546,7 @@ static void __attribute__((thiscall)) tick_monster_art(void *self, void *frame)
 static void *__attribute__((thiscall)) make_monster_sprite(void *sprite, void *resource, int derived)
 {
     void *result = original_make_sprite(sprite, resource, derived);
+    iggle_voice_sprite(result,resource);
     if(current_blobby_actor && resource && (resource==blobby_eyes[0] || resource==blobby_eyes[1] || resource==blobby_eyes[2])) {
         unsigned index=0;
         while(index<blobby_drawable_count && blobby_drawables[index].sprite!=result) ++index;
@@ -566,6 +586,7 @@ static void monster_visual_position(void *actor, void *sprite, float *x, float *
 
 static void __attribute__((thiscall)) draw_restored_monster(void *sprite, void *context)
 {
+    iggle_voice_draw(sprite);
     if(!custom_running) {original_monster_draw(sprite,context);return;}
     void **resource = (void **)((BYTE *)sprite+0x11c);
     void *original = *resource;
@@ -715,6 +736,17 @@ static void __attribute__((thiscall)) step_restored_time(void *phase, void *fram
     *delta = elapsed;
 }
 
+static void *find_voiced_art(void *theme,GameString *name)
+{
+    void *image=original_find_art(theme,name);
+    if(name && name->length<128 && name->length<=name->capacity) {
+        char label[128];
+        const char *text=name->capacity<16?name->value.inline_text:name->value.heap_text;
+        if(text){memcpy(label,text,name->length);label[name->length]=0;iggle_voice_art(image,label);}
+    }
+    return image;
+}
+
 static void *__attribute__((thiscall)) find_restored_art(void *theme, GameString *name)
 {
     // Continue may reach the first story dialog before the native hero theme
@@ -741,7 +773,7 @@ static void *__attribute__((thiscall)) find_restored_art(void *theme, GameString
         {char message[80];snprintf(message,sizeof message,"story portrait theme %p",theme);custom_trace(message);}
     }
 #endif
-    if(!custom_running)return original_find_art(theme,name);
+    if(!custom_running)return find_voiced_art(theme,name);
     const char *alias = NULL;
     if (creating_fireball && action_is(name,"bubbleProjectile")) alias="hdDragonFireball";
     if (restored_art == ART_SLOW && action_is(name, "freezePickupBase")) alias = "slowPickupBase";
@@ -771,10 +803,10 @@ static void *__attribute__((thiscall)) find_restored_art(void *theme, GameString
         else if (action_is(name,"genericZoogBlob0")) alias = "hdMonsterBlank";
         else if (!_strnicmp(name_text,"genericZoogBlob",15) && name->length == 16) alias = "hdMonsterBlank";
     }
-    if (!alias) return original_find_art(theme, name);
+    if (!alias) return find_voiced_art(theme, name);
     GameString replacement = {0};
     ((MakeString)(game_image+0x3d30))(&replacement, alias);
-    void *image = original_find_art(theme, &replacement);
+    void *image = find_voiced_art(theme, &replacement);
     ((PhaseFunction)(game_image+0x4f890))(&replacement);
     if (image && restored_art == ART_BLOBBY) {
         if (!strcmp(alias,"hdBlobbyEyesS")) blobby_eyes[0]=image;
@@ -804,11 +836,12 @@ static void *__attribute__((thiscall)) find_restored_art(void *theme, GameString
     }
     if (image) custom_trace(alias);
     else custom_trace("replacement art missing");
-    return image ? image : original_find_art(theme, name);
+    return image ? image : find_voiced_art(theme, name);
 }
 
 static void __attribute__((thiscall)) forget_rainbow_fuzzle(void *fuzzle)
 {
+    iggle_voice_forget(fuzzle);
     for (unsigned i = 0; i < rainbow_fuzzle_count; ++i) {
         if (rainbow_fuzzles[i] != fuzzle) continue;
         unsigned last = --rainbow_fuzzle_count;
@@ -849,6 +882,15 @@ static BOOL actor_position(void *actor, float *x, float *y)
     *x=point[0];
     *y=point[1];
     return TRUE;
+}
+
+static BOOL voice_actor_probe(void *actor,IggleVoiceActor *state)
+{
+    BYTE *fuzzle=actor;
+    state->alive=!fuzzle[0x44];
+    state->trapped=fuzzle[0x95]!=0;
+    state->following=*(void **)(fuzzle+0x58)!=NULL;
+    return actor_position(actor,&state->x,&state->y);
 }
 
 static void step_rainbow_diamonds(void *hero, float dt)
@@ -1414,6 +1456,7 @@ static ActionFunction original_record_campaign;
 
 static void set_mixer_volume(int channel, BOOL enabled)
 {
+    if(channel==0)iggle_voice_volume(enabled?audio_volume[0]:0);
     void *mixer = *(void **)(game_image + 0x1499cc);
     if (!mixer) return;
     typedef void (__attribute__((thiscall)) *SetVolume)(void *, int, float);
@@ -1768,6 +1811,9 @@ static void install_restored_objects(BYTE *base)
     install_action(base+0x5da00, cage_entity, sizeof cage_entity, (ActionFunction)spawn_cage, (ActionFunction *)&original_spawn_cage);
     install_action(base+0x5dc50, cage_show, sizeof cage_show, show_cage, &original_cage_show);
     install_action(base+0x60930, cage_attach, sizeof cage_attach, attach_cage, &original_attach_cage);
+    const BYTE breakfree_voice[]={0x6a,0xff,0x68,0x30,0x57,0x50,0x00};
+    install_action(base+0x631a0,breakfree_voice,sizeof breakfree_voice,
+        (ActionFunction)voiced_fuzzle_breakfree,(ActionFunction *)&original_fuzzle_breakfree);
     install_action(base+0x641a0, trapped, sizeof trapped, show_trapped_fuzzle, &original_trapped_art);
     install_action(base+0x5e420, dragon_entity, sizeof dragon_entity, (ActionFunction)spawn_monster, (ActionFunction *)&original_spawn_monster);
     install_action(base+0x5e780, dragon_activate, sizeof dragon_activate, activate_dragon, &original_dragon_activate);
@@ -1875,6 +1921,7 @@ static void install_audio_and_save_guards(BYTE *base)
         UINT volume = GetPrivateProfileIntA("audio", audio_keys[channel], 100, audio_settings_path);
         audio_volume[channel] = volume <= 100 ? volume : 100;
     }
+    iggle_voice_volume(audio_volume[0]);
     const BYTE effects[] = {0xe8,0x9b,0xb8,0xff,0xff};
     const BYTE music[] = {0xe8,0xdb,0xb8,0xff,0xff};
     const BYTE options_init[] = {0x6a,0xff,0x68,0x90,0x8a,0x50,0};

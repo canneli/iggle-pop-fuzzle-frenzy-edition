@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -26,10 +26,10 @@ internal static class Installer {
             string target = args.Length == 2 && args[0] == "--folder" ? args[1] : PickFolder();
             if (target == null) return;
             Install(Path.GetFullPath(target));
-            MessageBox.Show("Patch aplicado. Abra Mods ou Fases personalizadas no menu inicial do jogo.",
-                "Iggle Pop 16:9", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("Remake e vozes aplicados. Escolha Português ou English em Idioma no menu do jogo. Os balões acompanham as falas. Saves e fases personalizadas foram preservados.",
+                "Iggle Pop: Fuzzle Frenzy — Remake + Vozes", MessageBoxButtons.OK, MessageBoxIcon.Information);
         } catch (Exception error) {
-            MessageBox.Show(error.Message, "Iggle Pop 16:9", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(error.Message, "Iggle Pop: Fuzzle Frenzy — Remake + Vozes", MessageBoxButtons.OK, MessageBoxIcon.Error);
             Environment.ExitCode = 1;
         }
     }
@@ -112,6 +112,7 @@ internal static class Installer {
                 PropagationFlags.None, AccessControlType.Allow));
             directory.SetAccessControl(access);
         }
+        string updateBackup = Path.Combine(target, "FuzzleFrenzy-Remake-Voices-backup-v34");
         string transaction = Path.Combine(target, ".iggle-patch-" + Guid.NewGuid().ToString("N"));
         var applied = new List<string>();
         Directory.CreateDirectory(transaction);
@@ -128,6 +129,9 @@ internal static class Installer {
                 Directory.CreateDirectory(Path.GetDirectoryName(current));
                 if (File.Exists(current)) {
                     File.Copy(current, previous);
+                    string preservedUpdate = Path.Combine(updateBackup, relative);
+                    Directory.CreateDirectory(Path.GetDirectoryName(preservedUpdate));
+                    if (!File.Exists(preservedUpdate)) File.Copy(current, preservedUpdate);
                     if (input == target) {
                         string preserved = Path.Combine(backup, relative);
                         Directory.CreateDirectory(Path.GetDirectoryName(preserved));

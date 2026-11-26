@@ -14,6 +14,7 @@
 #include "iggle_level_editor.h"
 #include "iggle_menu.h"
 #include "iggle_mods.h"
+#include "iggle_voice.h"
 
 static volatile LONG opened, hovered = -1;
 BOOL iggle_editor_is_open(void) { return InterlockedCompareExchange(&opened,0,0)==5; }
@@ -494,10 +495,89 @@ static void draw_mods(IDirect3DDevice9 *d)
  text(d,words[mod_notice?7:6],320,382,.58f);
 }
 
+// Tiny native-sized visemes, drawn only on the visible front/side face of
+// the actual speaking actor. The back of a turning bubble never gets a mouth.
+static void voice_ellipse(IDirect3DDevice9 *d,float x,float y,float rx,float ry,DWORD color)
+{
+ struct Vertex v[26];v[0]=(struct Vertex){x,y,0,1,color,0,0};
+ for(unsigned i=0;i<=24;++i){float a=i*6.2831853f/24.f;v[i+1]=(struct Vertex){x+cosf(a)*rx,y+sinf(a)*ry,0,1,color,0,0};}
+ IDirect3DDevice9_SetTexture(d,0,NULL);
+ IDirect3DDevice9_DrawPrimitiveUP(d,D3DPT_TRIANGLEFAN,24,v,sizeof *v);
+}
+static void draw_voice_mouth(IDirect3DDevice9 *d,const IggleVoiceView *view)
+{
+ if(!view->mouth_visible)return;
+ float sx=g_ddraw.render.viewport.width/(float)max(1,g_ddraw.width);
+ float sy=g_ddraw.render.viewport.height/(float)max(1,g_ddraw.height);
+ float dx=view->direction==1?5.f:view->direction==2?-5.f:0;
+ float x=g_ddraw.render.viewport.x+(view->x+dx)*sx;
+ float y=g_ddraw.render.viewport.y+(view->y+9.f)*sy;
+ float rx=(1.35f+view->opening*1.1f)*(view->direction?.7f:1.f)*sx;
+ float ry=(.65f+view->opening*1.7f)*sy;
+ voice_ellipse(d,x,y,rx+.35f*sx,ry+.3f*sy,0xff422034);
+ voice_ellipse(d,x,y,rx,ry,0xff271728);
+ if(view->opening>.35f)voice_ellipse(d,x,y+ry*.48f,rx*.66f,ry*.3f,0xffe6909d);
+}
+
+static float voice_line_width(const char *line,float size)
+{
+ float width=0;
+ for(;*line;++line){const struct Glyph *g=glyph((unsigned char)*line);if(g)width+=(g->a+g->b+g->c)*size;}
+ return width;
+}
+static void voice_line(IDirect3DDevice9 *d,const char *line,float center,float y,float size,float sx,float sy,DWORD alpha)
+{
+ float start=center-voice_line_width(line,size)*sx/2;
+ // The game's own bitmap lettering, with a dark edge and warm red fill.
+ for(int pass=0;pass<5;++pass){
+  float x=start,dx=pass==0?-.6f:pass==1?.6f:0,dy=pass==2?-.6f:pass==3?.6f:0;
+  DWORD color=(alpha<<24)|(pass==4?0xe63b40:0x382434);
+  for(const char *p=line;*p;++p){const struct Glyph *g=glyph((unsigned char)*p);if(!g)continue;x+=g->a*size*sx;
+   quad(d,art[3].tex,x+dx*sx,y+dy*sy,g->b*size*sx,26*size*sy,color,(float)g->x/art[3].w,(float)g->y/art[3].h,(float)g->b/art[3].w,26.f/art[3].h);x+=(g->b+g->c)*size*sx;
+  }
+ }
+}
+static void draw_voice_balloon(IDirect3DDevice9 *d,const IggleVoiceView *view)
+{
+ if(!load_art(d,3))return;
+ const char *lines[2][4][2]={
+  {{"Hey! Over here!",""},{"I lost you!","Where'd you go?"},{"Wait! I'm still","in here!"},{"Help! I'm stuck","in this bubble!"}},
+  {{"Ei! Aqui!",""},{"Te perdi!","Cad\xea voc\xea?"},{"Espera! Ainda","t\xf4 aqui dentro!"},{"Socorro! T\xf4 preso","nessa bolha!"}}
+ };
+ const unsigned lang=iggle_current_language()==1?1:0,event=min(view->event,3u);
+ const char *a=lines[lang][event][0],*b=lines[lang][event][1];
+ float size=.56f,w=max(86.f,max(voice_line_width(a,size),voice_line_width(b,size))+40.f),h=*b?48.f:31.f;
+ float field=max(160.f,g_ddraw.width-114.f);
+ float cx=max(w/2+8.f,min(field-w/2-8.f,view->x+42.f));
+ float cy=view->y-h/2-30.f,sign=1;
+ if(cy<h/2+8.f){cy=view->y+h/2+28.f;sign=-1;}
+ cy=min(cy,g_ddraw.height-h/2-8.f);
+ float sx=g_ddraw.render.viewport.width/(float)max(1,g_ddraw.width),sy=g_ddraw.render.viewport.height/(float)max(1,g_ddraw.height);
+ float ox=g_ddraw.render.viewport.x,oy=g_ddraw.render.viewport.y;
+ float appear=min(1.f,view->progress*15.f),fade=min(1.f,(1.f-view->progress)*18.f);
+ DWORD alpha=(DWORD)(255.f*min(appear+.25f,fade));
+ float dotx=view->x+(cx-view->x)*.22f,doty=view->y-sign*17.f;
+ voice_ellipse(d,ox+dotx*sx,oy+doty*sy,4.5f*sx,2.8f*sy,(alpha<<24)|0x263545);
+ voice_ellipse(d,ox+dotx*sx,oy+(doty-.3f)*sy,3.4f*sx,1.8f*sy,(alpha<<24)|0xfffbee);
+ dotx=view->x+(cx-view->x)*.50f;doty=cy+sign*(h/2+7.f);
+ voice_ellipse(d,ox+dotx*sx,oy+doty*sy,7.2f*sx,4.8f*sy,(alpha<<24)|0x263545);
+ voice_ellipse(d,ox+dotx*sx,oy+(doty-.3f)*sy,6.f*sx,3.5f*sy,(alpha<<24)|0xfffbee);
+ voice_ellipse(d,ox+(cx+1.f)*sx,oy+(cy+2.f)*sy,(w/2+1.5f)*sx,(h/2+1.3f)*sy,((alpha/3)<<24));
+ voice_ellipse(d,ox+cx*sx,oy+cy*sy,w/2*sx,h/2*sy,(alpha<<24)|0x263545);
+ voice_ellipse(d,ox+cx*sx,oy+(cy-.4f)*sy,(w/2-1.3f)*sx,(h/2-1.3f)*sy,(alpha<<24)|0xcbdfe7);
+ voice_ellipse(d,ox+cx*sx,oy+(cy-.8f)*sy,(w/2-2.5f)*sx,(h/2-2.5f)*sy,(alpha<<24)|0xfffbee);
+ float y=oy+(cy-(*b?14.f:7.f))*sy;
+ voice_line(d,a,ox+cx*sx,y,size,sx,sy,alpha);
+ if(*b)voice_line(d,b,ox+cx*sx,y+15.f*sy,size,sx,sy,alpha);
+}
+
 void iggle_overlay_draw(IDirect3DDevice9*d){
  LONG page=InterlockedCompareExchange(&opened,0,0);
  IggleDiamondView view;
- if (!page && !iggle_diamond_view(&view)) return;
+ BOOL has_diamonds=iggle_diamond_view(&view);
+ IggleVoiceView voice;
+ BOOL has_voice=iggle_voice_view(&voice);
+ if (!page && !has_diamonds && !has_voice) return;
  if (page) for(int i=0;i<6;i++)if(!load_art(d,i))return;
  IDirect3DStateBlock9*state=NULL;if(FAILED(IDirect3DDevice9_CreateStateBlock(d,D3DSBT_ALL,&state)))return;
  IDirect3DStateBlock9_Capture(state);
@@ -511,7 +591,8 @@ void iggle_overlay_draw(IDirect3DDevice9*d){
  IDirect3DDevice9_SetTextureStageState(d,1,D3DTSS_COLOROP,D3DTOP_DISABLE);
  IDirect3DDevice9_SetSamplerState(d,0,D3DSAMP_MINFILTER,D3DTEXF_LINEAR);IDirect3DDevice9_SetSamplerState(d,0,D3DSAMP_MAGFILTER,D3DTEXF_LINEAR);
  if (!page) {
-  draw_diamond_effects(d,&view);
+  if(has_diamonds)draw_diamond_effects(d,&view);
+  if(has_voice){draw_voice_mouth(d,&voice);draw_voice_balloon(d,&voice);}
   IDirect3DStateBlock9_Apply(state);IDirect3DStateBlock9_Release(state);return;
  }
  quad(d,NULL,0,0,g_ddraw.render.width,g_ddraw.render.height,0xaa000000,0,0,1,1);

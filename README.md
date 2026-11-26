@@ -1,6 +1,6 @@
 # Iggle Pop: Fuzzle Frenzy Edition
 
-**Iggle Pop: Fuzzle Frenzy Edition is a Windows fan mod for Iggle Pop! Deluxe on Steam.** Play in 1080p widescreen with controller or WASD support, build custom stages in the in-game level editor, and try restored content from the original game: Rainbow Iggles, a time-slow pickup and a Dragon enemy. Play in English, Brazilian Portuguese or Spanish.
+**Iggle Pop: Fuzzle Frenzy Edition is a Windows fan mod for Iggle Pop! Deluxe on Steam.** Play in 1080p widescreen with controller or WASD support, build custom stages in the in-game level editor, and try restored content from the original game: Rainbow Iggles, a time-slow pickup and a Dragon enemy. Play in English, Brazilian Portuguese or Spanish. Includes a character remake, English/Portuguese Fuzzle voices and in-game speech balloons.
 
 [Download the Windows patch](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition/releases/latest) · [Português (Brasil)](#português-brasil)
 
@@ -18,6 +18,31 @@
 | Fixes | Widescreen click targets, bonus and stage-clear messages, menu transitions, and campaign progress kept separate from custom stage playtests. |
 
 ## A closer look
+
+### Character remake and Fuzzle voices — v34
+
+![Character remake asset preview: heroes and enemies](docs/images/character-remake.png)
+
+The character remake replaces 210 sprite frames and their paired transparency masks while preserving the native canvas sizes, pivots and character proportions. This preview shows replacement artwork, rather than a gameplay screenshot.
+
+![Fuzzle expression preview, including trapped and freed poses](docs/images/fuzzle-expressions.png)
+
+Fuzzle colors have distinct expressions in both trapped and freed poses: curious green, calmer blue, determined yellow, grumpy orange and cheerful Rainbow. Directional sprites keep the expression appropriate to the visible face.
+
+The new **English and Brazilian Portuguese voice lines** are supplied by the mod author. All eight clips together use **111 KB (about 109 KiB)** as mono OGG Vorbis at 22.05 kHz. In-game language selection chooses the matching voice set; Spanish interface text remains available with English voice fallback.
+
+| Moment | Voice line |
+| --- | --- |
+| A stage begins | A random trapped Fuzzle calls “Hey! Over here!” |
+| The native unassisted break-free event | “I lost you! Where'd you go?”; ordinary player rescues and home deliveries do not trigger it. |
+| Only a few trapped Fuzzles remain | “Wait! I'm still in here!” |
+| An occasional plea during a stage | “Help! I'm stuck in this bubble!” |
+
+Oval speech balloons with red lettering and small trailing bubbles identify the speaker and follow the selected English or Portuguese dialogue. They are reconstructed from the supplied reference in the game's renderer. Mouth movement follows the audio when the front or side of the face is visible.
+
+**v34 restores the original Fuzzle cheers, “yuhull” sounds and reactions.** The new dialogue is an addition to those sounds. Delivering a speaking Fuzzle lets its sentence finish; stage exits and pause stop the line. New dialogue lines do not overlap each other and use the sound-effects volume control.
+
+The installer includes the earlier Fuzzle Frenzy changes, preserves existing saves, custom stages and video settings, and keeps overwritten files in `FuzzleFrenzy-Remake-Voices-backup-v34`. The final balloon and restored-sound revision is available for player testing.
 
 ### A wider playfield
 
@@ -102,7 +127,7 @@ The localized Freeze badges keep the jagged silhouette and blue outline. The loa
 ## Installation
 
 1. Install **Iggle Pop! Deluxe on Steam** and close the game.
-2. Download `Iggle-Pop-Fuzzle-Frenzy-Edition-v32.exe` from the [latest release](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition/releases/latest).
+2. Download `Iggle-Pop-Fuzzle-Frenzy-Remake-Vozes-v34.exe` from the [latest release](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition/releases/latest).
 3. Run the installer and select your Steam game folder.
 4. Launch from Steam. Open **Options** for video, audio and controls, **Language** to choose a translation, or **Custom Levels** to play and edit stages.
 
@@ -110,6 +135,7 @@ The installer checks the Steam game files and backs up the files it replaces in 
 
 ## Credits
 
+- OGG dialogue playback uses [stb_vorbis](https://github.com/nothings/stb), with the [MIT license preserved](docs/licenses/stb_vorbis.txt).
 - **Iggle Pop! Deluxe** and its original artwork belong to their respective creators and rights holders. This is an independent fan project.
 - The renderer is based on [cnc-ddraw](https://github.com/FunkyFr3sh/cnc-ddraw) and retains its [MIT license](LICENSE).
 - The code includes AMD FidelityFX Super Resolution 1. See the [AMD license](docs/licenses/AMD-FSR-LICENSE.txt).
@@ -118,6 +144,31 @@ The installer checks the Steam game files and backs up the files it replaces in 
 ---
 
 ## Português (Brasil)
+
+### Remake dos personagens e vozes dos Fuzzles — v34
+
+![Prévia das novas artes de heróis e inimigos](docs/images/character-remake.png)
+
+O remake troca 210 quadros de sprites e suas máscaras de transparência, mantendo tamanho de tela, pontos de apoio e proporções dos personagens. As imagens desta seção são prévias das artes.
+
+![Expressões diferentes dos Fuzzles presos e libertados](docs/images/fuzzle-expressions.png)
+
+Cada cor tem uma expressão própria, dentro e fora da bolha: verde curioso, azul tranquilo, amarelo determinado, laranja emburrado e Rainbow alegre.
+
+As falas criadas pelo autor estão em **inglês e português brasileiro**. Os oito arquivos usam OGG Vorbis mono a 22.050 Hz e somam **111 KB (cerca de 109 KiB)**. O idioma escolhido no jogo seleciona as vozes correspondentes. A interface em espanhol continua disponível, com vozes em inglês.
+
+| Momento | Fala |
+| --- | --- |
+| Início da fase | Um Fuzzle preso aleatório chama “Ei! Aqui!” |
+| Evento original de fuga da bolha sem ajuda | “Te perdi! Cadê você?”; resgates normais e entregas na casa não disparam essa fala. |
+| Poucos Fuzzles ainda presos | “Espera! Ainda tô aqui dentro!” |
+| Pedido ocasional durante a fase | “Socorro! Tô preso nessa bolha!” |
+
+Os balões ovais, com letras vermelhas e bolhinhas apontando para o personagem, acompanham quem fala e mostram o texto no idioma escolhido. Foram reconstruídos no renderizador com base na referência enviada. A boca acompanha o áudio quando a frente ou o lado do rosto está visível.
+
+**A v34 devolve os “yuhull”, as comemorações e as reações originais dos Fuzzles.** As falas novas complementam esses sons. Entregar o Fuzzle durante uma frase deixa o áudio terminar; pausar ou sair da fase interrompe a fala. As falas novas não se sobrepõem entre si e acompanham o volume dos efeitos sonoros.
+
+O instalador reúne as alterações anteriores da Fuzzle Frenzy, preserva saves, fases personalizadas e configurações de vídeo existentes e guarda os arquivos substituídos em `FuzzleFrenzy-Remake-Voices-backup-v34`. Esta revisão final dos balões e sons restaurados está disponível para teste dos jogadores.
 
 **Iggle Pop: Fuzzle Frenzy Edition é um mod para Iggle Pop! Deluxe da Steam no Windows.** Jogue em 1080p com tela 16:9, use controle ou WASD e crie mapas no editor de fases integrado. A tradução inclui português brasileiro e espanhol, e as fases personalizadas podem usar os Iggles arco-íris, o poder de tempo lento e o Dragão.
 
@@ -215,7 +266,7 @@ O selo de gelo mantém a silhueta irregular e o contorno azul. O texto da tela d
 ### Instalação
 
 1. Instale o **Iggle Pop! Deluxe da Steam** e feche o jogo.
-2. Baixe `Iggle-Pop-Fuzzle-Frenzy-Edition-v32.exe` na [release](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition/releases/latest).
+2. Baixe `Iggle-Pop-Fuzzle-Frenzy-Remake-Vozes-v34.exe` na [release](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition/releases/latest).
 3. Abra o instalador e selecione a pasta do jogo.
 4. Inicie pela Steam. Use **Opções** para vídeo, áudio e controles, **Idioma** para tradução e **Fases personalizadas** para jogar ou editar mapas.
 
@@ -223,6 +274,7 @@ O instalador valida os arquivos da edição Steam, faz uma cópia dos arquivos q
 
 ### Créditos
 
+- A reprodução das falas OGG usa [stb_vorbis](https://github.com/nothings/stb), com a [licença MIT preservada](docs/licenses/stb_vorbis.txt).
 - **Iggle Pop! Deluxe** e sua arte original pertencem aos respectivos criadores e titulares. Esta é uma edição de fã independente.
 - A camada de vídeo deriva de [cnc-ddraw](https://github.com/FunkyFr3sh/cnc-ddraw), com a [licença MIT](LICENSE) preservada.
 - O código inclui AMD FidelityFX Super Resolution 1. Consulte a [licença da AMD](docs/licenses/AMD-FSR-LICENSE.txt).
