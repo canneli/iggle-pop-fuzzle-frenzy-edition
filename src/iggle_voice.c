@@ -14,11 +14,12 @@
 
 enum { VOICE_HEY,VOICE_LOST,VOICE_WAIT,VOICE_HELP,VOICE_ACTORS=1024,VOICE_SPRITES=8192 };
 static struct { void *actor; IggleVoiceActor state; BOOL sampled,was_following; } actors[VOICE_ACTORS];
-static struct { void *sprite,*actor; unsigned direction; } sprites[VOICE_SPRITES];
+static struct { void *sprite,*actor; unsigned direction; BOOL free_face; } sprites[VOICE_SPRITES];
 static unsigned actor_count,sprite_count,volume=100,rng;
 static void *building,*speaking,*lost_actor;
 static void *build_image;
 static unsigned build_direction;
+static BOOL building_free_face;
 static float age,cooldown,next_help,lost_age,last_lost;
 static unsigned initial_trapped,max_trapped,help_count;
 static BOOL greeted,warned;
@@ -91,19 +92,19 @@ void iggle_voice_art(void *image,const char *name) {
  else if(!_strnicmp(name,"follow",6)||!_strnicmp(name,"hdRainbow",9)) {
   char c=name[n-1];direction=c=='S'||c=='s'?0:c=='E'||c=='e'?1:c=='W'||c=='w'?2:3;
  }
- if(direction<4){build_image=image;build_direction=direction;}
+ if(direction<4){build_image=image;build_direction=direction;building_free_face=_strnicmp(name,"trapped",7)!=0;}
 }
 void iggle_voice_sprite(void *sprite,void *image) {
  if(!building||!sprite||image!=build_image)return;
  unsigned i=0;while(i<sprite_count&&sprites[i].sprite!=sprite)++i;
  if(i>=VOICE_SPRITES)return;
  if(i==sprite_count)++sprite_count;
- sprites[i].sprite=sprite;sprites[i].actor=building;sprites[i].direction=build_direction;
+ sprites[i].sprite=sprite;sprites[i].actor=building;sprites[i].direction=build_direction;sprites[i].free_face=building_free_face;
 }
 BOOL iggle_voice_face(void *sprite,void *actor,unsigned *direction) {
  for(unsigned i=0;i<sprite_count;++i) if(sprites[i].sprite==sprite && sprites[i].actor==actor) {
   *direction=sprites[i].direction;
-  return *direction<3;
+  return *direction<3 && sprites[i].free_face;
  }
  return FALSE;
 }
