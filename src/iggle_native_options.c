@@ -29,9 +29,13 @@ static char custom_path[MAX_PATH], custom_temporary[MAX_PATH];
 static const char custom_level_resource[] = "res/igglemods/custom-stage.xml";
 static BOOL custom_running, custom_ready, custom_exit_pending;
 static BOOL loading_custom_objects;
+static float cloak_animation_seconds;
+static void *cloak_native_images[4],*cloak_animation_images[4][8];
 static BOOL voice_actor_probe(void *actor,IggleVoiceActor *state);
 static const char *custom_theme;
 static DWORD saved_level_index, saved_level_number;
+static char saved_custom_hero[32];
+static BOOL custom_hero_changed;
 #ifdef IGGLE_CUSTOM_TEST
 static void custom_trace(const char *message);
 #endif
@@ -66,6 +70,9 @@ static void __attribute__((thiscall)) active_update_hook(void *phase, void *fram
     if(in_pause_menu || custom_exit_pending || iggle_overlay_is_open())iggle_voice_stop();
     if(!in_pause_menu && !custom_exit_pending && !iggle_overlay_is_open())
         iggle_voice_tick(*(float *)((BYTE *)frame+8),voice_actor_probe);
+    float cloak_dt=*(float *)((BYTE *)frame+8);
+    if(!in_pause_menu && !custom_exit_pending && !iggle_overlay_is_open() && cloak_dt>0 && cloak_dt<.5f)
+        cloak_animation_seconds+=cloak_dt;
 
     void *bonus_screen = *(void **)(world + 0x12c);
     if (bonus_screen && *(void **)bonus_screen == game_image + 0x116e20) {
@@ -207,7 +214,30 @@ static FindArt original_find_particle;
 static void *blobby_eyes[3];
 static void *blobby_images[4][8];
 static struct {void *sprite,*actor;float x,y;unsigned direction;DWORD next_turn;BOOL positioned;} blobby_drawables[EDIT_GRID_MAX*EDIT_GRID_MAX];
+
 static void *current_blobby_actor;
+enum { HYPNOSIS_LIMIT = 8 };
+static BYTE *hypnosis_fuzzles[EDIT_GRID_MAX*EDIT_GRID_MAX];
+static unsigned hypnosis_fuzzle_count;
+static ActionFunction original_fuzzle_chase, original_hypnosis_transition, original_blobby_pop_tick;
+static BOOL blobby_pop_ready;
+static struct {
+    BYTE *blobby, *fuzzle;
+    float left, cooldown, opening;
+    int target[2], last[2];
+} hypnosis[HYPNOSIS_LIMIT];
+static SRWLOCK hypnosis_lock=SRWLOCK_INIT;
+static IggleHypnosisEye hypnosis_eyes[HYPNOSIS_LIMIT];
+static DWORD hypnosis_eye_at[HYPNOSIS_LIMIT];
+static void step_blobby_hypnosis(BYTE *blobby,float dt);
+static void show_hypnosis_eyes(void *sprite);
+static void remember_hypnosis_fuzzle(void *actor)
+{
+    for(unsigned i=0;i<hypnosis_fuzzle_count;++i) if(hypnosis_fuzzles[i]==actor) return;
+    if(hypnosis_fuzzle_count<ARRAYSIZE(hypnosis_fuzzles))
+        hypnosis_fuzzles[hypnosis_fuzzle_count++]=actor;
+}
+
 static unsigned blobby_drawable_count;
 static BOOL creating_fireball;
 static void *fireballs[1024];
@@ -285,6 +315,9 @@ static void reset_crystal_power(void)
 static void reset_restored_objects(void)
 {
     iggle_voice_reset();
+    cloak_animation_seconds=0;
+    memset(cloak_native_images,0,sizeof cloak_native_images);
+    memset(cloak_animation_images,0,sizeof cloak_animation_images);
     iggle_end_slow_power();
     slow_count = 0;
     rainbow_count = restored_monster_count = 0;
@@ -300,6 +333,11 @@ static void reset_restored_objects(void)
     ReleaseSRWLockExclusive(&diamond_lock);
     dragon_drawable_count = 0;
     blobby_drawable_count=0;
+    hypnosis_fuzzle_count=0;
+    memset(hypnosis,0,sizeof hypnosis);
+    AcquireSRWLockExclusive(&hypnosis_lock);
+    memset(hypnosis_eye_at,0,sizeof hypnosis_eye_at);
+    ReleaseSRWLockExclusive(&hypnosis_lock);
     current_blobby_actor=NULL;
     dragon_sprite_image = NULL;
     creating_dragon_sprite = FALSE;
@@ -400,6 +438,7 @@ static void __attribute__((thiscall)) attach_cage(void *fuzzle, void *cage)
         remember_rainbow(fuzzle);
     }
     original_attach_cage(fuzzle, cage);
+    if(custom_running) remember_hypnosis_fuzzle(fuzzle);
     iggle_voice_register(fuzzle);
     restored_art = previous;
 }
@@ -408,6 +447,7 @@ static ActionFunction original_trapped_art;
 static void __attribute__((thiscall)) show_trapped_fuzzle(void *fuzzle, void *args)
 {
     iggle_voice_register(fuzzle);
+    if(custom_running) remember_hypnosis_fuzzle(fuzzle);
     void *previous_voice=iggle_voice_build(fuzzle);
     int previous = restored_art;
     void *cage = *(void **)((BYTE *)fuzzle+0xa4);
@@ -426,6 +466,7 @@ static void __attribute__((thiscall)) free_rainbow_fuzzle(void *fuzzle, void *ar
     int previous = restored_art;
     if (restored_index(rainbow_fuzzles,rainbow_fuzzle_count,fuzzle)>=0) restored_art=ART_RAINBOW;
     original_freed_fuzzle(fuzzle,args);
+    if(custom_running) remember_hypnosis_fuzzle(fuzzle);
     iggle_voice_build(previous_voice);
     restored_art=previous;
 }
@@ -539,6 +580,7 @@ static void __attribute__((thiscall)) tick_monster_art(void *self, void *frame)
     if (diamonds.slow_seconds>0) *delta=elapsed*.26f;
     original_monster_tick(self,frame);
     if (restored_art==ART_DRAGON) update_dragon_combat(self,frame);
+    if (restored_art==ART_BLOBBY) step_blobby_hypnosis(self,*delta);
     *delta=elapsed;
     restored_art=previous;
 }
@@ -587,6 +629,18 @@ static void monster_visual_position(void *actor, void *sprite, float *x, float *
 static void __attribute__((thiscall)) draw_restored_monster(void *sprite, void *context)
 {
     iggle_voice_draw(sprite);
+    if(custom_running) show_hypnosis_eyes(sprite);
+    // This is a native enemy used by the campaign as well as custom stages.
+    // Replace only its graphic during drawing, then restore the resource.
+    void **cloak_resource=(void **)((BYTE *)sprite+0x11c);
+    for(unsigned direction=0;direction<4;++direction)if(*cloak_resource && *cloak_resource==cloak_native_images[direction]) {
+        void *saved=*cloak_resource;
+        unsigned frame=((unsigned)(cloak_animation_seconds*10.f)+(unsigned)((uintptr_t)sprite>>5))%8;
+        if(cloak_animation_images[direction][frame])*cloak_resource=cloak_animation_images[direction][frame];
+        original_monster_draw(sprite,context);
+        *cloak_resource=saved;
+        return;
+    }
     if(!custom_running) {original_monster_draw(sprite,context);return;}
     void **resource = (void **)((BYTE *)sprite+0x11c);
     void *original = *resource;
@@ -742,7 +796,19 @@ static void *find_voiced_art(void *theme,GameString *name)
     if(name && name->length<128 && name->length<=name->capacity) {
         char label[128];
         const char *text=name->capacity<16?name->value.inline_text:name->value.heap_text;
-        if(text){memcpy(label,text,name->length);label[name->length]=0;iggle_voice_art(image,label);}
+        if(text){
+            memcpy(label,text,name->length);label[name->length]=0;iggle_voice_art(image,label);
+            const char *cloak_names[]={"cloakZoogSouth","cloakZoogEast","cloakZoogNorth","cloakZoogWest"};
+            for(unsigned direction=0;direction<4;++direction)if(image && !_stricmp(label,cloak_names[direction])) {
+                cloak_native_images[direction]=image;
+                if(!cloak_animation_images[direction][0])for(unsigned frame=0;frame<8;++frame) {
+                    char key[24];snprintf(key,sizeof key,"hdCloak%c%u","senw"[direction],frame);
+                    GameString resource={0};((MakeString)(game_image+0x3d30))(&resource,key);
+                    cloak_animation_images[direction][frame]=original_find_art(theme,&resource);
+                    ((PhaseFunction)(game_image+0x4f890))(&resource);
+                }
+            }
+        }
     }
     return image;
 }
@@ -842,6 +908,16 @@ static void *__attribute__((thiscall)) find_restored_art(void *theme, GameString
 static void __attribute__((thiscall)) forget_rainbow_fuzzle(void *fuzzle)
 {
     iggle_voice_forget(fuzzle);
+    for(unsigned i=0;i<ARRAYSIZE(hypnosis);++i) if(hypnosis[i].fuzzle==fuzzle) {
+        hypnosis[i].fuzzle=NULL;
+        AcquireSRWLockExclusive(&hypnosis_lock);
+        hypnosis_eye_at[i]=0;
+        ReleaseSRWLockExclusive(&hypnosis_lock);
+    }
+    for(unsigned i=0;i<hypnosis_fuzzle_count;++i) if(hypnosis_fuzzles[i]==fuzzle) {
+        hypnosis_fuzzles[i]=hypnosis_fuzzles[--hypnosis_fuzzle_count];
+        break;
+    }
     for (unsigned i = 0; i < rainbow_fuzzle_count; ++i) {
         if (rainbow_fuzzles[i] != fuzzle) continue;
         unsigned last = --rainbow_fuzzle_count;
@@ -882,6 +958,251 @@ static BOOL actor_position(void *actor, float *x, float *y)
     *x=point[0];
     *y=point[1];
     return TRUE;
+}
+
+// These offsets are for the supported Steam executable. The dormant native
+// "chase fuzzle" movement state owns its pathfinder and forwards contacts
+// through the Fuzzle. Hypnosis redirects movement without joining the hero's
+// chain or editing the cage, score, or number of Fuzzles left to deliver.
+static BOOL hypnosis_unclaimed(BYTE *fuzzle)
+{
+    return *(BYTE **)fuzzle==game_image+0x113f48 && !fuzzle[0x44] && !*(void **)(fuzzle+0x58);
+}
+
+static BOOL hypnosis_in_state(BYTE *fuzzle, DWORD rva)
+{
+    BYTE *state=*(BYTE **)(fuzzle+0xf0);
+    return state && *(BYTE **)state==game_image+rva;
+}
+
+static BOOL hypnosis_eligible(BYTE *fuzzle)
+{
+    return hypnosis_unclaimed(fuzzle) && !fuzzle[0x95] &&
+           (fuzzle[0x96] || hypnosis_in_state(fuzzle,0x113ee8));
+}
+
+static BOOL hypnosis_can_pop(BYTE *fuzzle)
+{
+    return blobby_pop_ready && hypnosis_unclaimed(fuzzle) && fuzzle[0x95] &&
+           *(void **)(fuzzle+0xa4) && hypnosis_in_state(fuzzle,0x111c78);
+}
+
+static void __attribute__((thiscall)) step_blobby_pop(void *self,void *frame)
+{
+    BYTE *state=self;
+    BYTE *fuzzle=*(BYTE **)(state+0xc);
+    if(custom_running && fuzzle && *(void **)(fuzzle+0xf0)==self) {
+        for(unsigned i=0;i<ARRAYSIZE(hypnosis);++i) {
+            if(hypnosis[i].fuzzle==fuzzle && hypnosis[i].opening>0) {
+                // The native overlap callback sets +1d. On completion the
+                // pop update checks that byte before entering the chase.
+                // It would otherwise call 462db0 and rebuild the old cage.
+                if(state[0x1d]) {
+                    state[0x1d]=0;
+                    custom_trace("ignored recapture during blobby pop");
+                }
+                break;
+            }
+        }
+    }
+    original_blobby_pop_tick(self,frame);
+}
+
+static BOOL pop_blobby_bubble(BYTE *fuzzle)
+{
+    typedef void *(__cdecl *Allocate)(size_t);
+    typedef void *(__attribute__((thiscall)) *BuildPop)(void *,int,int,void *,int);
+    void *memory=((Allocate)(game_image+0xc0706))(0x28);
+    if(!memory) return FALSE;
+    // Non-player route: mirror 462b30. The pop state starts the original
+    // animation and creates the native chase state when the animation ends.
+    void *state=((BuildPop)(game_image+0x61b10))(memory,4,0,fuzzle,1);
+    if(!state) return FALSE;
+    original_hypnosis_transition(fuzzle,state);
+    return hypnosis_in_state(fuzzle,0x113c88);
+}
+
+static void __attribute__((thiscall)) guard_hypnosis_transition(void *self,void *incoming)
+{
+    BYTE *fuzzle=self;
+    if(custom_running && incoming && *(BYTE **)incoming==game_image+0x111c78) {
+        for(unsigned i=0;i<ARRAYSIZE(hypnosis);++i) {
+            if(hypnosis[i].fuzzle!=fuzzle ||
+               (!hypnosis_in_state(fuzzle,0x113c88) && !hypnosis_in_state(fuzzle,0x113ee8))) continue;
+            // Match the native transition's temporary reference. Dropping it
+            // disposes a new state but respects any reference the caller owns.
+            BYTE *ref=(BYTE *)incoming+*(int *)(*(BYTE **)((BYTE *)incoming+4)+4)+4;
+            void **v=*(void ***)ref;
+            ((PhaseFunction)v[0])(ref);
+            ((PhaseFunction)v[1])(ref);
+            return;
+        }
+    }
+    original_hypnosis_transition(self,incoming);
+}
+
+static void step_blobby_hypnosis(BYTE *blobby,float dt)
+{
+    if(!original_fuzzle_chase || !custom_running || !custom_game || !current_player || in_pause_menu ||
+       custom_exit_pending || iggle_overlay_is_open() || !(dt>0 && dt<.5f) || blobby[0x44]) return;
+    unsigned slot=0;
+    while(slot<ARRAYSIZE(hypnosis) && hypnosis[slot].blobby!=blobby) ++slot;
+    if(slot==ARRAYSIZE(hypnosis)) {
+        for(slot=0;slot<ARRAYSIZE(hypnosis);++slot) if(!hypnosis[slot].blobby) break;
+        if(slot==ARRAYSIZE(hypnosis))
+            for(slot=0;slot<ARRAYSIZE(hypnosis);++slot)
+                if(!hypnosis[slot].fuzzle && hypnosis[slot].cooldown<=0) break;
+        if(slot==ARRAYSIZE(hypnosis)) return;
+        hypnosis[slot].blobby=blobby;
+    }
+    void *world=*(void **)((BYTE *)current_player+0xd4);
+    if(!world) return;
+    int *cell=(int *)(blobby+0x10);
+    BYTE *held=hypnosis[slot].fuzzle;
+    if(held) {
+        if(hypnosis[slot].opening>0 && hypnosis_unclaimed(held) && *(void **)(held+0xa0)==world &&
+           (hypnosis_in_state(held,0x113c88) || hypnosis_in_state(held,0x113ee8)) &&
+           (hypnosis[slot].opening-=dt)>0) return;
+        if(hypnosis[slot].opening<=0 && hypnosis_eligible(held) && *(void **)(held+0xa0)==world &&
+           hypnosis[slot].left>0) {
+            if(cell[0]!=hypnosis[slot].last[0] || cell[1]!=hypnosis[slot].last[1]) {
+                memcpy(hypnosis[slot].target,hypnosis[slot].last,sizeof hypnosis[slot].target);
+                memcpy(hypnosis[slot].last,cell,sizeof hypnosis[slot].last);
+            }
+            return;
+        }
+        hypnosis[slot].fuzzle=NULL;
+        hypnosis[slot].opening=0;
+        hypnosis[slot].cooldown=7.f;
+        return;
+    }
+    if(hypnosis[slot].cooldown>0) { hypnosis[slot].cooldown-=dt; return; }
+
+    float x,y;
+    if(!actor_position(blobby,&x,&y)) return;
+    BYTE *chosen=NULL;
+    unsigned candidates=0;
+    for(unsigned i=0;i<hypnosis_fuzzle_count;++i) {
+        BYTE *f=hypnosis_fuzzles[i];
+        if((!hypnosis_eligible(f) && !hypnosis_can_pop(f)) || *(void **)(f+0xa0)!=world) continue;
+        BOOL occupied=FALSE;
+        for(unsigned j=0;j<ARRAYSIZE(hypnosis);++j) if(hypnosis[j].fuzzle==f) occupied=TRUE;
+        if(occupied) continue;
+        float fx,fy;
+        if(!actor_position(f,&fx,&fy)) continue;
+        float dx=x-fx,dy=y-fy;
+        float radius=hypnosis_can_pop(f)?23.f:12.f;
+        if(dx*dx+dy*dy<=radius*radius && !memcmp(f+0x10,cell,8) && rand()%++candidates==0) chosen=f;
+    }
+    if(!chosen) return;
+    if(hypnosis_can_pop(chosen)) {
+        hypnosis[slot].fuzzle=chosen;
+        hypnosis[slot].opening=2.f;
+        hypnosis[slot].left=0;
+        if(!pop_blobby_bubble(chosen)) {
+            hypnosis[slot].opening=0;
+            hypnosis[slot].fuzzle=NULL;
+            hypnosis[slot].cooldown=.5f;
+            return;
+        }
+        memcpy(hypnosis[slot].last,cell,sizeof hypnosis[slot].last);
+        memcpy(hypnosis[slot].target,cell,sizeof hypnosis[slot].target);
+        custom_trace("blobby opened prison once");
+        return;
+    }
+    BYTE *state=*(BYTE **)(chosen+0xf0);
+    if(!state || *(BYTE **)state!=game_image+0x113ee8) {
+        typedef void *(__cdecl *Allocate)(size_t);
+        typedef void *(__attribute__((thiscall)) *Construct)(void *,void *,int);
+        void *memory=((Allocate)(game_image+0xc0706))(0x2c);
+        if(!memory) return;
+        state=((Construct)(game_image+0x63ba0))(memory,chosen,1);
+        if(!state) return;
+        ((ActionFunction)(*(void ***)chosen)[0xd4/4])(chosen,state);
+    }
+    hypnosis[slot].fuzzle=chosen;
+    hypnosis[slot].left=5.5f;
+    memcpy(hypnosis[slot].last,cell,sizeof hypnosis[slot].last);
+    memcpy(hypnosis[slot].target,cell,sizeof hypnosis[slot].target);
+    custom_trace("blobby hypnotized free fuzzle");
+}
+
+static void __attribute__((thiscall)) step_hypnosis_chase(void *self,void *frame)
+{
+    BYTE *state=self;
+    BYTE *f=*(BYTE **)(state+0xc);
+    for(unsigned i=0;i<ARRAYSIZE(hypnosis);++i) {
+        if(hypnosis[i].fuzzle!=f) continue;
+        if(!custom_running || !hypnosis_eligible(f) || (hypnosis[i].left<=0 && !hypnosis[i].opening)) break;
+        if(in_pause_menu || custom_exit_pending || iggle_overlay_is_open()) return;
+        if(hypnosis[i].opening>0) {
+            hypnosis[i].opening=0;
+            hypnosis[i].left=5.5f;
+            custom_trace("blobby hypnotized fuzzle after native pop");
+        }
+        float dt=*(float *)((BYTE *)frame+8);
+        if(dt>0 && dt<.5f && (hypnosis[i].left-=dt)<=0) {
+            hypnosis[i].fuzzle=NULL;
+            hypnosis[i].cooldown=7.f;
+            break;
+        }
+        float x,y,hx,hy;
+        BYTE *hero=current_player;
+        if(hero && !hero[0x44] && actor_position(f,&x,&y) && actor_position(hero,&hx,&hy)) {
+            float dx=x-hx,dy=y-hy;
+            if(dx*dx+dy*dy<=12.f*12.f && !memcmp(f+0x10,hero+0x10,8)) {
+                hypnosis[i].fuzzle=NULL;
+                hypnosis[i].cooldown=7.f;
+                custom_trace("player broke blobby hypnosis");
+                break;
+            }
+        }
+        void *motion=*(void **)(state+0x20);
+        if(!motion || *(BYTE **)motion!=game_image+0x110570) break;
+        void **m=*(void ***)motion, **v=*(void ***)f;
+        typedef void *(__attribute__((thiscall)) *GetPoint)(void *);
+        typedef int (__attribute__((thiscall)) *GetDirection)(void *);
+        ((ActionFunction)m[0x60/4])(motion,hypnosis[i].target);
+        ((ActionFunction)m[0x24/4])(motion,frame);
+        ((ActionFunction)v[0x64/4])(f,((GetPoint)m[0x30/4])(motion));
+        int direction=((GetDirection)m[0x2c/4])(motion);
+        *(int *)(f+0x9c)=direction;
+        ((ActionFunction)v[0xb8/4])(f,((GetPoint)m[0x34/4])(motion));
+        void *animation=*(void **)(f+0x84);
+        if(animation && direction>=0 && direction<=4) {
+            typedef void (__attribute__((thiscall)) *Animate)(void *,int,int,int);
+            ((Animate)(*(void ***)animation)[0x120/4])(animation,direction,0,1);
+        }
+        return;
+    }
+    original_fuzzle_chase(self,frame);
+}
+
+static void show_hypnosis_eyes(void *sprite)
+{
+    for(unsigned i=0;i<ARRAYSIZE(hypnosis);++i) {
+        BYTE *f=hypnosis[i].fuzzle;
+        unsigned direction;
+        float x,y;
+        if(!f || hypnosis[i].opening>0 || !hypnosis_eligible(f) || !iggle_voice_face(sprite,f,&direction) ||
+           !actor_position(f,&x,&y)) continue;
+        AcquireSRWLockExclusive(&hypnosis_lock);
+        hypnosis_eye_at[i]=GetTickCount();
+        hypnosis_eyes[i]=(IggleHypnosisEye){x,y,5.5f-hypnosis[i].left,direction};
+        ReleaseSRWLockExclusive(&hypnosis_lock);
+        break;
+    }
+}
+
+unsigned iggle_hypnosis_view(IggleHypnosisEye out[8])
+{
+    unsigned count=0;
+    if(!TryAcquireSRWLockShared(&hypnosis_lock)) return 0;
+    DWORD now=GetTickCount();
+    for(unsigned i=0;i<ARRAYSIZE(hypnosis_eyes);++i)
+        if(hypnosis_eye_at[i] && now-hypnosis_eye_at[i]<100) out[count++]=hypnosis_eyes[i];
+    ReleaseSRWLockShared(&hypnosis_lock);
+    return count;
 }
 
 static BOOL voice_actor_probe(void *actor,IggleVoiceActor *state)
@@ -1359,6 +1680,15 @@ static void restore_menu_input(BYTE *game)
 }
 
 
+static void select_native_hero(const char *name)
+{
+    BYTE *app=*(BYTE **)(game_image+0x148c60);
+    if(!app||!name)return;
+    GameString hero={0};((MakeString)(game_image+0x3d30))(&hero,name);
+    ((ActionFunction)(game_image+0x3150))(app,&hero);
+    ((PhaseFunction)(game_image+0x4f890))(&hero);
+}
+
 static void finish_custom(BYTE *game)
 {
     reset_crystal_power();
@@ -1372,6 +1702,7 @@ static void finish_custom(BYTE *game)
     custom_game = NULL;
     custom_running = FALSE;
     custom_path[0] = 0;
+    if(custom_hero_changed){select_native_hero(saved_custom_hero);custom_hero_changed=FALSE;}
     iggle_input_set_gameplay(FALSE);
     restore_menu_input(game);
     ((PhaseFunction)(game_image + 0x2ac0))(game);
@@ -1821,6 +2152,16 @@ static void install_restored_objects(BYTE *base)
     install_action(base+0x5e670, monster_update, sizeof monster_update, update_monster_spawner, &original_spawn_monster_update);
     install_action(base+0x519e0, dragon_init, sizeof dragon_init, init_dragon_art, &original_dragon_init);
     install_action(base+0x559d0, blobby_init, sizeof blobby_init, init_blobby_art, &original_blobby_init);
+    const BYTE chase[]={0x6a,0xff,0x64,0xa1,0,0,0,0};
+    install_action(base+0x624c0,chase,sizeof chase,step_hypnosis_chase,&original_fuzzle_chase);
+    const BYTE native_pop[]={0x6a,0xff,0x68,0xa8,0x56,0x50,0x00};
+    const BYTE state_transition[]={0x56,0x8b,0x74,0x24,0x08};
+    const BYTE pop_tick[]={0x64,0xa1,0,0,0,0,0x6a,0xff,0x68,0x91,0x5a,0x50,0x00};
+    blobby_pop_ready=original_fuzzle_chase &&
+        !memcmp(base+0x61b10,native_pop,sizeof native_pop) &&
+        install_action(base+0x614d0,state_transition,sizeof state_transition,
+                       guard_hypnosis_transition,&original_hypnosis_transition) &&
+        install_action(base+0x651f0,pop_tick,sizeof pop_tick,step_blobby_pop,&original_blobby_pop_tick);
     install_action(base+0x522e0, monster_tick, sizeof monster_tick, tick_monster_art, &original_monster_tick);
     install_action(base+0x64520, freed, sizeof freed, free_rainbow_fuzzle, &original_freed_fuzzle);
     install_action(base+0x82e50, make_sprite, sizeof make_sprite,
@@ -2116,6 +2457,17 @@ BOOL iggle_custom_launch(void *menu)
     custom_menu_state = NULL;
     saved_level_index = *(DWORD *)(game+0x130);
     saved_level_number = *(DWORD *)(game+0x134);
+    BYTE *app=*(BYTE **)(game_image+0x148c60);
+    if(app){
+        GameString *previous=(GameString *)(app+0x13c);
+        const char *text=previous->capacity<16?previous->value.inline_text:previous->value.heap_text;
+        const char *selected=iggle_editor_hero_name(iggle_level_hero(custom_path));
+        const BYTE expected[]={0x6a,0xff,0x68,0xb3,0xd1,0x4f,0x00};
+        if(text && previous->length<sizeof saved_custom_hero && !memcmp(game_image+0x3150,expected,sizeof expected)){
+            memcpy(saved_custom_hero,text,previous->length);saved_custom_hero[previous->length]=0;
+            select_native_hero(selected);custom_hero_changed=TRUE;
+        }
+    }
     custom_state = ((BuildState)(game_image + 0x20f0))(memory, game, 1);
     custom_game = game;
     custom_running = TRUE;

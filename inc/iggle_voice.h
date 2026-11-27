@@ -14,6 +14,7 @@ void *iggle_voice_build(void *actor);
 void iggle_voice_art(void *image,const char *name);
 void iggle_voice_sprite(void *sprite,void *image);
 void iggle_voice_draw(void *sprite);
+BOOL iggle_voice_face(void *sprite,void *actor,unsigned *direction);
 void iggle_voice_tick(float seconds,IggleVoiceProbe probe);
 BOOL iggle_voice_view(IggleVoiceView *view);
 BOOL iggle_voice_available(void);

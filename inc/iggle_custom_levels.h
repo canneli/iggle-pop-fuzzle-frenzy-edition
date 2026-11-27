@@ -14,6 +14,8 @@ typedef struct {
     BOOL shield, positioned;
 } IggleDiamondView;
 BOOL iggle_diamond_view(IggleDiamondView *view);
+typedef struct { float x,y,age; unsigned direction; } IggleHypnosisEye;
+unsigned iggle_hypnosis_view(IggleHypnosisEye out[8]);
 BOOL iggle_custom_directory(wchar_t path[MAX_PATH]);
 int iggle_custom_refresh(void);
 const char *iggle_custom_name(int index);

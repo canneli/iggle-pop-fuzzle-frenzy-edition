@@ -13,6 +13,18 @@ static SRWLOCK board_lock = SRWLOCK_INIT;
 static BOOL com_initialized, dirty;
 static const wchar_t *objects[] = { L"playerSpawner", L"cageSpawner", L"fuzzleHome", L"monsterSpawner" };
 static const wchar_t *colors[] = { L"Green", L"Blue", L"Yellow", L"Purple" };
+static const wchar_t *hero_keys[]={L"Fizzy",L"Dizzy",L"Bozz",L"Rizzo",L"Doc"};
+static const char *hero_names[]={"Fizzy","Dizzy","Bozz","Rizzo","Doc"};
+const char *iggle_editor_hero_name(int hero){return hero_names[hero>=0&&hero<EDIT_HERO_COUNT?hero:0];}
+static int read_hero(IXMLDOMDocument2 *doc)
+{
+    IXMLDOMElement *root=NULL;IXMLDOMDocument2_get_documentElement(doc,&root);
+    if(!root)return 0;
+    VARIANT value;VariantInit(&value);BSTR key=SysAllocString(L"hdHero");
+    root->lpVtbl->getAttribute(root,key,&value);SysFreeString(key);root->lpVtbl->Release(root);
+    int hero=0;if(value.vt==VT_BSTR&&value.bstrVal)for(int i=0;i<EDIT_HERO_COUNT;++i)if(!_wcsicmp(value.bstrVal,hero_keys[i]))hero=i;
+    VariantClear(&value);return hero;
+}
 static const wchar_t *const monster_types[EDIT_ZOOG_COUNT] = {
     L"Basic Tracker",L"Med Tracker",L"Basic Blobby",L"Med Blobby",L"BasicShooter",L"Armor Zoog",
     L"Fire Zoog",L"Tunnel Zoog",L"Super Zoog",L"Guard",L"Guard Fast",L"Bomber-SlwAcc",
@@ -147,6 +159,7 @@ static BOOL read_board(void)
         next.columns > EDIT_GRID_MAX || next.rows > EDIT_GRID_MAX) return FALSE;
 
     next.world = read_world(document);
+    next.hero = read_hero(document);
     read_tiles(&next, L"/level/maze/floor", L"@cell", EDIT_HAS_FLOOR, FALSE, 0);
     read_tiles(&next, L"/level/maze/edge[@dir='h']", L"@edgeIndex", EDIT_HAS_WALL_H, FALSE, 0);
     read_tiles(&next, L"/level/maze/edge[@dir='v']", L"@edgeIndex", EDIT_HAS_WALL_V, FALSE, 0);
@@ -274,6 +287,17 @@ BOOL iggle_level_prepare(char path[MAX_PATH], char temporary[MAX_PATH])
     if (doc) IXMLDOMDocument2_Release(doc);
     if (SUCCEEDED(initialized)) CoUninitialize();
     return valid;
+}
+
+int iggle_level_hero(const char *path)
+{
+    wchar_t filename[MAX_PATH];
+    if(!path||!MultiByteToWideChar(CP_ACP,0,path,-1,filename,ARRAYSIZE(filename)))return 0;
+    HRESULT result=CoInitializeEx(NULL,COINIT_APARTMENTTHREADED);
+    if(FAILED(result)&&result!=RPC_E_CHANGED_MODE)return 0;
+    IXMLDOMDocument2 *doc=create_document();int hero=0;
+    if(doc){if(load_document(doc,filename))hero=read_hero(doc);IXMLDOMDocument2_Release(doc);}
+    if(SUCCEEDED(result))CoUninitialize();return hero;
 }
 
 const char *iggle_level_theme(const char *path)
@@ -426,6 +450,15 @@ static void attribute(IXMLDOMElement *node, const wchar_t *key, const wchar_t *t
     node->lpVtbl->setAttribute(node, name, value);
     VariantClear(&value);
     SysFreeString(name);
+}
+
+BOOL iggle_editor_set_hero(int hero)
+{
+    if(!document||hero<0||hero>=EDIT_HERO_COUNT)return FALSE;
+    IXMLDOMElement *root=NULL;IXMLDOMDocument2_get_documentElement(document,&root);
+    if(!root)return FALSE;
+    attribute(root,L"hdHero",hero_keys[hero]);root->lpVtbl->Release(root);
+    dirty=TRUE;return read_board();
 }
 
 BOOL iggle_editor_set_world(int world)

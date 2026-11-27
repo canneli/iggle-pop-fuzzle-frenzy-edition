@@ -19,6 +19,10 @@
 
 ## A closer look
 
+### Experimental v39: Blobby hypnosis
+
+Blobby can pop a Fuzzle bubble in custom stages and make the freed Fuzzle follow him with swirling eyes. This build suppresses the immediate re-capture signal during Blobby's pop animation. [Download the v39 pre-release](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition/releases/tag/v39) for playtesting. The latest stable download remains available above.
+
 ### Character remake and Fuzzle voices — v34
 
 ![Character remake asset preview: heroes and enemies](docs/images/character-remake.png)
@@ -144,6 +148,10 @@ The installer checks the Steam game files and backs up the files it replaces in 
 ---
 
 ## Português (Brasil)
+
+### v39 experimental: hipnose do Gosmento
+
+Em fases personalizadas, o Gosmento pode estourar a bolha de um Fuzzle e fazê-lo seguir com espirais nos olhos. Esta revisão bloqueia o sinal que refazia a bolha imediatamente durante a animação. [Baixe a prévia v39](https://github.com/canneli/iggle-pop-fuzzle-frenzy-edition/releases/tag/v39) para testar.
 
 ### Remake dos personagens e vozes dos Fuzzles — v34
 

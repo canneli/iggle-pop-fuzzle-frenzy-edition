@@ -100,6 +100,13 @@ void iggle_voice_sprite(void *sprite,void *image) {
  if(i==sprite_count)++sprite_count;
  sprites[i].sprite=sprite;sprites[i].actor=building;sprites[i].direction=build_direction;
 }
+BOOL iggle_voice_face(void *sprite,void *actor,unsigned *direction) {
+ for(unsigned i=0;i<sprite_count;++i) if(sprites[i].sprite==sprite && sprites[i].actor==actor) {
+  *direction=sprites[i].direction;
+  return *direction<3;
+ }
+ return FALSE;
+}
 void iggle_voice_draw(void *sprite) {
  if(!speaking)return;
  for(unsigned i=0;i<sprite_count;++i)if(sprites[i].sprite==sprite&&sprites[i].actor==speaking) {

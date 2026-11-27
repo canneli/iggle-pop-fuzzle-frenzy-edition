@@ -61,6 +61,7 @@ static struct Art art[] = {{"menuwindowlarge"},{"orangebutton"},{"orangebuttonhi
  {"level-slow"},{"level-dragon"},{"level-rainbow-0"},{"level-rainbow-1"},
  {"editor-hudbg"},{"editor-modeselbtn"},{"editor-modeselbtnhi"},{"editor-modeselbtnchecked"},
  {"editor-editbtnbase"},{"editor-editbtnbasehi"},{"editor-imgframe"},{"editor-tinybtnbase"},{"rainbow-diamond"},{"rainbow-aura"},{"crystal-sparkle"},{"mod-floor"},{"mod-filled"},{"mod-wall-h"},{"mod-wall-v"}
+ ,{"editor-hero-fizzy"},{"editor-hero-dizzy"},{"editor-hero-bozz"},{"editor-hero-rizzo"},{"editor-hero-doc"}
 };
 struct Vertex { float x,y,z,rhw; DWORD color; float u,v; };
 
@@ -144,7 +145,8 @@ enum { ART_HERO=6, ART_ZOOG, ART_CAGE, ART_HOME=ART_CAGE+EDIT_COLOR_COUNT,
        ART_GUARD, ART_BOMBER, ART_GMZ, ART_FREEZE, ART_ZAP, ART_SORT, ART_POP,
        ART_SLOW=ART_POP+EDIT_COLOR_COUNT, ART_DRAGON, ART_RAINBOW, ART_RAINBOW_ALT,
        ART_EDITOR_HUD, ART_MODE, ART_MODE_HOVER, ART_MODE_CHECK, ART_EDITOR_BUTTON,
-       ART_EDITOR_BUTTON_HOVER, ART_EDITOR_FRAME, ART_EDITOR_ARROW, ART_DIAMOND, ART_AURA, ART_CRYSTAL_SPARKLE, ART_MOD_TILES };
+       ART_EDITOR_BUTTON_HOVER, ART_EDITOR_FRAME, ART_EDITOR_ARROW, ART_DIAMOND, ART_AURA, ART_CRYSTAL_SPARKLE, ART_MOD_TILES,
+       ART_EDITOR_HERO=ART_MOD_TILES+4 };
 static const int monster_art[EDIT_ZOOG_COUNT] = {
  ART_ZOOG,ART_ZOOG,ART_BLOBBY,ART_BLOBBY,ART_SHOOTER,ART_ARMOR,ART_FIRE,ART_TUNNEL,ART_ZOOG,
  ART_GUARD,ART_GUARD,ART_BOMBER,ART_BOMBER,ART_BOMBER,ART_BOMBER,ART_BOMBER,ART_GMZ,ART_DRAGON
@@ -261,7 +263,7 @@ static float editor_geometry(const EditorBoard *board, float *left, float *top)
 
 static int picker_count(void)
 {
- return editor_picker==EDIT_ZOOG ? EDIT_ZOOG_COUNT : EDIT_POWER_COUNT;
+ return editor_picker==EDIT_HERO ? EDIT_HERO_COUNT : editor_picker==EDIT_ZOOG ? EDIT_ZOOG_COUNT : EDIT_POWER_COUNT;
 }
 
 static struct Box picker_box(int index)
@@ -287,16 +289,19 @@ static void draw_power_icon(IDirect3DDevice9 *d, int sprite, float x, float y, f
 static void draw_editor_picker(IDirect3DDevice9 *d,int lang)
 {
  BOOL monsters=editor_picker==EDIT_ZOOG;
+ BOOL heroes=editor_picker==EDIT_HERO;
+ const char *hero_titles[]={"Choose a hero","Escolha um her\xf3i","Elige un h\xe9roe"};
  rectangle(d,0,0,640,480,0xab001625);
  image(d,0,77,45,486,376);
- text(d,monsters?monster_title[lang]:power_title[lang],320,67,1.05f);
+ text(d,heroes?hero_titles[lang]:monsters?monster_title[lang]:power_title[lang],320,67,1.05f);
  for(int i=0;i<picker_count();++i) {
   struct Box slot=picker_box(i);
   image(d,picker_focus==i?2:1,slot.x,slot.y,slot.w,slot.h);
-  if (monsters && monster_art[i]==ART_BLOBBY) image(d,ART_BLOBBY,slot.x+5,slot.y+1,33,30);
+  if (heroes && load_art(d,ART_EDITOR_HERO+i)) image(d,ART_EDITOR_HERO+i,slot.x+8,slot.y+3,25,25);
+  else if (monsters && monster_art[i]==ART_BLOBBY) image(d,ART_BLOBBY,slot.x+5,slot.y+1,33,30);
   else if (monsters) image(d,monster_art[i],slot.x+8,slot.y+3,25,25);
   else draw_power_icon(d,power_art(i,editor_color),slot.x+8,slot.y+3,25);
-  text(d,monsters?monster_words[lang][i]:power_words[lang][i],slot.x+82,slot.y+8,.57f);
+  text(d,heroes?iggle_editor_hero_name(i):monsters?monster_words[lang][i]:power_words[lang][i],slot.x+82,slot.y+8,.57f);
  }
  menu_button(d,(struct Box){265,355,110,37},library_words[lang][5],picker_focus==picker_count(),TRUE);
 }
@@ -336,7 +341,7 @@ static void draw_level_editor(IDirect3DDevice9 *d)
    if (x>=board.columns || y>=board.rows) continue;
    unsigned object=board.objects[y][x];
    int sprite=-1;
-   if (object==EDIT_HERO) sprite=ART_HERO;
+   if (object==EDIT_HERO) {sprite=ART_EDITOR_HERO+board.hero;load_art(d,sprite);}
    if (object==EDIT_ZOOG) sprite=monster_art[board.monsters[y][x]];
    if (object==EDIT_CAGE) sprite=board.colors[y][x]==EDIT_RAINBOW ? ART_RAINBOW+(GetTickCount()/420%2) : ART_CAGE+board.colors[y][x];
    if (object==EDIT_HOME) sprite=ART_HOME+board.colors[y][x];
@@ -371,7 +376,7 @@ static void draw_level_editor(IDirect3DDevice9 *d)
  if (editor_tool==EDIT_POWER) preview=power_art(editor_power,editor_color);
  if (editor_tool==EDIT_CAGE) preview=editor_color==EDIT_RAINBOW?ART_RAINBOW+(GetTickCount()/420%2):ART_CAGE+editor_color;
  if (editor_tool==EDIT_HOME) preview=ART_HOME+editor_color;
- if (editor_tool==EDIT_HERO) preview=ART_HERO;
+ if (editor_tool==EDIT_HERO) {preview=ART_EDITOR_HERO+board.hero;load_art(d,preview);}
  if (editor_tool==EDIT_FLOOR) preview=world_art+1;
  if (editor_tool==EDIT_WALL) preview=world_art+2;
  if (preview==ART_FREEZE) draw_power_icon(d,preview,533,260,32);
@@ -392,7 +397,7 @@ static void draw_level_editor(IDirect3DDevice9 *d)
   if (i==EDIT_COMMAND_COLOR) continue;
   struct Box action=editor_actions[i];
   BOOL arrow=i==EDIT_COMMAND_PREVIOUS || i==EDIT_COMMAND_NEXT;
-  if (arrow && editor_tool!=EDIT_ZOOG && editor_tool!=EDIT_POWER && editor_tool!=EDIT_CAGE && editor_tool!=EDIT_HOME) continue;
+  if (arrow && editor_tool!=EDIT_ZOOG && editor_tool!=EDIT_POWER && editor_tool!=EDIT_CAGE && editor_tool!=EDIT_HOME && editor_tool!=EDIT_HERO) continue;
   const char *label=i==EDIT_COMMAND_WORLD?(mod_world[0]?mod_world:world_words[lang][min(board.world,EDIT_WORLD_COUNT-1)]):
                     i==EDIT_COMMAND_PREVIOUS?"<":i==EDIT_COMMAND_NEXT?">":labels[7+i];
   if (arrow && hovered==EDIT_TOOL_COUNT+i) rectangle(d,action.x-2,action.y-2,action.w+4,action.h+4,0xff8bdbff);
@@ -401,6 +406,7 @@ static void draw_level_editor(IDirect3DDevice9 *d)
   text(d,label,action.x+action.w*.5f,action.y+4,i==EDIT_COMMAND_COPY?.52f:.69f);
  }
  if (editor_notice) text(d,labels[editor_notice>0?12:13],243,444,.72f);
+ else if(editor_tool==EDIT_HERO)text(d,iggle_editor_hero_name(board.hero),243,444,.73f);
  else if (editor_tool==EDIT_ZOOG || editor_tool==EDIT_POWER)
   text(d,editor_tool==EDIT_ZOOG?monster_words[lang][editor_monster]:power_words[lang][editor_power],243,444,.73f);
  else if (editor_tool==EDIT_CAGE && editor_color==EDIT_RAINBOW) {
@@ -504,6 +510,22 @@ static void voice_ellipse(IDirect3DDevice9 *d,float x,float y,float rx,float ry,
  IDirect3DDevice9_SetTexture(d,0,NULL);
  IDirect3DDevice9_DrawPrimitiveUP(d,D3DPT_TRIANGLEFAN,24,v,sizeof *v);
 }
+static void draw_hypnosis_eyes(IDirect3DDevice9 *d,const IggleHypnosisEye *eye)
+{
+ float sx=g_ddraw.render.viewport.width/(float)max(1,g_ddraw.width);
+ float sy=g_ddraw.render.viewport.height/(float)max(1,g_ddraw.height);
+ float x=g_ddraw.render.viewport.x+eye->x*sx, y=g_ddraw.render.viewport.y+(eye->y+1.f)*sy;
+ for(int i=0;i<(eye->direction?1:2);++i) {
+  float cx=x+(eye->direction==1?5.f:eye->direction==2?-5.f:i?4.f:-4.f)*sx;
+  voice_ellipse(d,cx,y,2.7f*sx,2.8f*sy,0xff442052);
+  voice_ellipse(d,cx,y,2.1f*sx,2.25f*sy,0xffead4ff);
+  for(int j=0;j<14;++j) {
+   float a=j*.46f+eye->age*8.f, r=.12f*j;
+   voice_ellipse(d,cx+cosf(a)*r*sx,y+sinf(a)*r*sy,.43f*sx,.43f*sy,0xff823db4);
+  }
+ }
+}
+
 static void draw_voice_mouth(IDirect3DDevice9 *d,const IggleVoiceView *view)
 {
  if(!view->mouth_visible)return;
@@ -577,7 +599,9 @@ void iggle_overlay_draw(IDirect3DDevice9*d){
  BOOL has_diamonds=iggle_diamond_view(&view);
  IggleVoiceView voice;
  BOOL has_voice=iggle_voice_view(&voice);
- if (!page && !has_diamonds && !has_voice) return;
+ IggleHypnosisEye eyes[8];
+ unsigned eye_count=page?0:iggle_hypnosis_view(eyes);
+ if (!page && !has_diamonds && !has_voice && !eye_count) return;
  if (page) for(int i=0;i<6;i++)if(!load_art(d,i))return;
  IDirect3DStateBlock9*state=NULL;if(FAILED(IDirect3DDevice9_CreateStateBlock(d,D3DSBT_ALL,&state)))return;
  IDirect3DStateBlock9_Capture(state);
@@ -592,6 +616,7 @@ void iggle_overlay_draw(IDirect3DDevice9*d){
  IDirect3DDevice9_SetSamplerState(d,0,D3DSAMP_MINFILTER,D3DTEXF_LINEAR);IDirect3DDevice9_SetSamplerState(d,0,D3DSAMP_MAGFILTER,D3DTEXF_LINEAR);
  if (!page) {
   if(has_diamonds)draw_diamond_effects(d,&view);
+  for(unsigned i=0;i<eye_count;++i) draw_hypnosis_eyes(d,&eyes[i]);
   if(has_voice){draw_voice_mouth(d,&voice);draw_voice_balloon(d,&voice);}
   IDirect3DStateBlock9_Apply(state);IDirect3DStateBlock9_Release(state);return;
  }
@@ -885,9 +910,10 @@ static void editor_choose_tool(int tool)
  editor_tool=tool;
  if(tool!=EDIT_CAGE && editor_color==EDIT_RAINBOW) editor_color=0;
  editor_notice=0;
- if (tool==EDIT_ZOOG || tool==EDIT_POWER) {
+ if (tool==EDIT_ZOOG || tool==EDIT_POWER || tool==EDIT_HERO) {
   editor_picker=tool;
-  picker_focus=tool==EDIT_ZOOG?editor_monster:editor_power;
+  EditorBoard board;iggle_editor_board(&board);
+  picker_focus=tool==EDIT_HERO?board.hero:tool==EDIT_ZOOG?editor_monster:editor_power;
  }
 }
 
@@ -896,7 +922,8 @@ static void pick_editor_variant(int choice)
  int count=picker_count();
  if (choice<0 || choice>count) return;
  if (choice<count) {
-  if (editor_picker==EDIT_ZOOG) editor_monster=choice;
+  if(editor_picker==EDIT_HERO)iggle_editor_set_hero(choice);
+  else if (editor_picker==EDIT_ZOOG) editor_monster=choice;
   else editor_power=choice;
  }
  editor_picker=0;
@@ -943,7 +970,8 @@ static void editor_activate(HWND hwnd,int index)
  case EDIT_COMMAND_PREVIOUS:
  case EDIT_COMMAND_NEXT: {
   int step=index-EDIT_TOOL_COUNT==EDIT_COMMAND_NEXT?1:-1;
-  if(editor_tool==EDIT_ZOOG) editor_monster=(editor_monster+step+EDIT_ZOOG_COUNT)%EDIT_ZOOG_COUNT;
+  if(editor_tool==EDIT_HERO){EditorBoard board;iggle_editor_board(&board);iggle_editor_set_hero((board.hero+step+EDIT_HERO_COUNT)%EDIT_HERO_COUNT);}
+  else if(editor_tool==EDIT_ZOOG) editor_monster=(editor_monster+step+EDIT_ZOOG_COUNT)%EDIT_ZOOG_COUNT;
   else if(editor_tool==EDIT_POWER) editor_power=(editor_power+step+EDIT_POWER_COUNT)%EDIT_POWER_COUNT;
   else if(editor_tool==EDIT_CAGE || editor_tool==EDIT_HOME) {
    int count=EDIT_COLOR_COUNT+(editor_tool==EDIT_CAGE);
@@ -974,7 +1002,7 @@ static void editor_activate(HWND hwnd,int index)
 
 static BOOL editor_variant_arrows(void)
 {
- return editor_tool==EDIT_ZOOG || editor_tool==EDIT_POWER || editor_tool==EDIT_CAGE || editor_tool==EDIT_HOME;
+ return editor_tool==EDIT_HERO || editor_tool==EDIT_ZOOG || editor_tool==EDIT_POWER || editor_tool==EDIT_CAGE || editor_tool==EDIT_HOME;
 }
 
 static void move_editor_panel(int direction)
